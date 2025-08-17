@@ -37,9 +37,39 @@ export interface Comment {
   replies?: Comment[];
 }
 
+// Video update interface for editing metadata
+export interface VideoUpdate {
+  title?: string;
+  description?: string;
+}
+
+// API Response types
 export interface APIResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
 }
+
+// YouTube service error types
+export interface YouTubeErrorDetails {
+  code: string;
+  message: string;
+  status?: number;
+  details?: unknown;
+}
+
+// Re-export YouTube service types
+export type {
+  YouTubeAPIVideoResponse,
+  YouTubeAPIVideoItem,
+  YouTubeAPIThumbnail,
+  YouTubeAPICommentsResponse,
+  YouTubeAPICommentItem,
+  YouTubeAPICommentReply,
+  YouTubeAPIError,
+  YouTubeRateLimitError,
+  YouTubeAuthError,
+  YouTubeNotFoundError,
+  YouTubeService
+} from '../services/youtube';

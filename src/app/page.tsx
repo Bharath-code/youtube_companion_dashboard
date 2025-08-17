@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Loader2, Video, MessageSquare, StickyNote, Activity } from 'lucide-react';
 import Link from 'next/link';
 
+
 export default function Home() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
@@ -45,7 +46,7 @@ export default function Home() {
               <p className="text-muted-foreground mb-6">
                 Access all your video management tools from the sidebar or use the quick actions below.
               </p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
                   <Link href="/videos">
                     <Video className="h-6 w-6" />
@@ -71,6 +72,8 @@ export default function Home() {
                   </Link>
                 </Button>
               </div>
+              
+             
             </>
           ) : (
             <>
