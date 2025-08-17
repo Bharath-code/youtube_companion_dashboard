@@ -32,6 +32,7 @@ export interface Comment {
   textDisplay: string;
   authorDisplayName: string;
   authorProfileImageUrl: string;
+  authorChannelId?: string;
   publishedAt: string;
   likeCount: number;
   replies?: Comment[];
@@ -71,5 +72,6 @@ export type {
   YouTubeRateLimitError,
   YouTubeAuthError,
   YouTubeNotFoundError,
+  YouTubeCommentsDisabledError,
   YouTubeService
 } from '../services/youtube';

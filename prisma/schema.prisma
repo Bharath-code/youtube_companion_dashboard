@@ -13,6 +13,8 @@ datasource db {
 model User {
   id            String    @id @default(cuid())
   name          String?
+  displayName   String?   // Custom display name that user can set
+  username      String?   // Optional username for @mentions, etc.
   email         String    @unique
   emailVerified DateTime?
   image         String?
@@ -79,6 +81,10 @@ model Note {
   
   @@index([videoId])
   @@index([userId])
+  @@index([content]) // Add content indexing for better search performance
+  @@index([tags])    // Add tags indexing for better tag filtering
+  @@index([userId, videoId]) // Composite index for user-video queries
+  @@index([userId, createdAt]) // Composite index for user-date queries
   @@map("notes")
 }
 

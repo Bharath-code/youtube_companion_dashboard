@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { VideoDetails } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, ThumbsUp, MessageCircle, Calendar, Lock, Globe, Users, Loader2, RefreshCw } from 'lucide-react';
+import { Eye, ThumbsUp, MessageCircle, Calendar, Lock, Globe, Users, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
 interface VideoListProps {
@@ -19,6 +20,7 @@ interface VideoWithStatus extends VideoDetails {
 }
 
 export function VideoList({ onVideoSelect, className }: VideoListProps) {
+  const router = useRouter();
   const [videos, setVideos] = useState<VideoWithStatus[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +28,15 @@ export function VideoList({ onVideoSelect, className }: VideoListProps) {
   const [totalResults, setTotalResults] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const { isAuthenticated, requireAuth } = useAuth();
+
+  // Handle video selection
+  const handleVideoClick = (video: VideoDetails) => {
+    // Call the optional callback
+    onVideoSelect?.(video);
+
+    // Navigate to video details page with the video ID pre-filled
+    router.push(`/video-details?videoId=${video.id}`);
+  };
 
   // Format numbers for display
   const formatNumber = (num: number): string => {
@@ -79,7 +90,7 @@ export function VideoList({ onVideoSelect, className }: VideoListProps) {
       const params = new URLSearchParams({
         maxResults: '20',
       });
-      
+
       if (pageToken) {
         params.append('pageToken', pageToken);
       }
@@ -93,13 +104,13 @@ export function VideoList({ onVideoSelect, className }: VideoListProps) {
 
       if (result.success && result.data) {
         const newVideos = result.data.videos;
-        
+
         if (append) {
           setVideos(prev => [...prev, ...newVideos]);
         } else {
           setVideos(newVideos);
         }
-        
+
         setNextPageToken(result.data.nextPageToken);
         setTotalResults(result.data.totalResults);
       } else {
@@ -108,7 +119,7 @@ export function VideoList({ onVideoSelect, className }: VideoListProps) {
     } catch (err) {
       console.error('Error fetching videos:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch videos');
-      
+
       if (!append) {
         setVideos([]);
       }
@@ -241,7 +252,7 @@ export function VideoList({ onVideoSelect, className }: VideoListProps) {
           </Button>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <div className="grid gap-4">
           {videos.map((video) => {
@@ -252,8 +263,8 @@ export function VideoList({ onVideoSelect, className }: VideoListProps) {
             return (
               <div
                 key={video.id}
-                className="flex space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => onVideoSelect?.(video)}
+                className="flex space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group"
+                onClick={() => handleVideoClick(video)}
               >
                 {/* Thumbnail */}
                 <div className="relative w-32 h-20 bg-gray-100 rounded overflow-hidden shrink-0">
@@ -275,13 +286,16 @@ export function VideoList({ onVideoSelect, className }: VideoListProps) {
                 {/* Video Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-sm line-clamp-2 pr-2">
+                    <h3 className="font-semibold text-sm line-clamp-2 pr-2 group-hover:text-primary transition-colors">
                       {video.title}
                     </h3>
-                    <Badge variant="secondary" className={`${privacyInfo.color} shrink-0 ml-2`}>
-                      <PrivacyIcon className="w-3 h-3 mr-1" />
-                      {privacyInfo.label}
-                    </Badge>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <Badge variant="secondary" className={privacyInfo.color}>
+                        <PrivacyIcon className="w-3 h-3 mr-1" />
+                        {privacyInfo.label}
+                      </Badge>
+                      <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
                   </div>
 
                   <div className="flex items-center space-x-4 text-xs text-muted-foreground mb-2">

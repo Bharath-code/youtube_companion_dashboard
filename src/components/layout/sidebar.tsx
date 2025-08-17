@@ -28,16 +28,16 @@ const navigationItems = [
     description: 'Overview and quick actions'
   },
   {
-    title: 'Video Management',
+    title: 'My Videos',
     href: '/videos',
     icon: Video,
-    description: 'View and edit video details'
+    description: 'Browse and select videos'
   },
   {
-    title: 'Comments',
-    href: '/comments',
+    title: 'Video Manager',
+    href: '/video-details',
     icon: MessageSquare,
-    description: 'Manage video comments'
+    description: 'Edit metadata & comments'
   },
   {
     title: 'Notes',

@@ -70,7 +70,7 @@ export default function VideosPage() {
         <div>
           <h1 className="text-3xl font-bold mb-2">Your YouTube Videos</h1>
           <p className="text-muted-foreground">
-            Select a video to view details and manage metadata and comments.
+            Click on any video to open the integrated management interface where you can edit metadata, manage comments, and more.
           </p>
         </div>
 

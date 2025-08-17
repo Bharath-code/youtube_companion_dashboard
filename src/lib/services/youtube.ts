@@ -160,6 +160,13 @@ export class YouTubeNotFoundError extends YouTubeAPIError {
   }
 }
 
+export class YouTubeCommentsDisabledError extends YouTubeAPIError {
+  constructor(message: string = 'Comments are disabled for this video') {
+    super(message, 'COMMENTS_DISABLED', 403);
+    this.name = 'YouTubeCommentsDisabledError';
+  }
+}
+
 // YouTube service class
 export class YouTubeService {
   private readonly apiKey: string;
@@ -295,6 +302,12 @@ export class YouTubeService {
             `API quota exceeded: ${errorMessage}`
           );
         }
+        if (errorMessage.toLowerCase().includes('disabled comments') || 
+            errorMessage.toLowerCase().includes('has disabled comments')) {
+          throw new YouTubeCommentsDisabledError(
+            'Comments are disabled for this video'
+          );
+        }
         throw new YouTubeAuthError(
           `Access forbidden: ${errorMessage}`
         );
@@ -363,6 +376,7 @@ export class YouTubeService {
       textDisplay: reply.snippet.textDisplay,
       authorDisplayName: reply.snippet.authorDisplayName,
       authorProfileImageUrl: reply.snippet.authorProfileImageUrl,
+      authorChannelId: reply.snippet.authorChannelId?.value,
       publishedAt: reply.snippet.publishedAt,
       likeCount: reply.snippet.likeCount,
     })) || [];
@@ -372,6 +386,7 @@ export class YouTubeService {
       textDisplay: comment.textDisplay,
       authorDisplayName: comment.authorDisplayName,
       authorProfileImageUrl: comment.authorProfileImageUrl,
+      authorChannelId: comment.authorChannelId?.value,
       publishedAt: comment.publishedAt,
       likeCount: comment.likeCount,
       replies: replies.length > 0 ? replies : undefined,
@@ -485,6 +500,143 @@ export class YouTubeService {
       }
       // Other errors might not be related to API key validity
       throw error;
+    }
+  }
+
+  /**
+   * Post a comment to a video (requires OAuth token)
+   */
+  async postComment(
+    videoId: string,
+    text: string,
+    accessToken: string
+  ): Promise<Comment> {
+    try {
+      const requestBody = {
+        snippet: {
+          videoId: videoId,
+          topLevelComment: {
+            snippet: {
+              textOriginal: text
+            }
+          }
+        }
+      };
+
+      const response = await fetch(`${this.baseUrl}/commentThreads?part=snippet`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        await this.handleAPIError(response);
+      }
+
+      const data = await response.json();
+      return this.transformComment(data);
+    } catch (error) {
+      if (error instanceof YouTubeAPIError) {
+        throw error;
+      }
+      
+      throw new YouTubeAPIError(
+        'Failed to post comment',
+        'POST_ERROR',
+        0,
+        error
+      );
+    }
+  }
+
+  /**
+   * Reply to a comment (requires OAuth token)
+   */
+  async replyToComment(
+    parentCommentId: string,
+    text: string,
+    accessToken: string
+  ): Promise<Comment> {
+    try {
+      const requestBody = {
+        snippet: {
+          parentId: parentCommentId,
+          textOriginal: text
+        }
+      };
+
+      const response = await fetch(`${this.baseUrl}/comments?part=snippet`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        await this.handleAPIError(response);
+      }
+
+      const data = await response.json();
+      
+      // Transform reply to our Comment format
+      return {
+        id: data.id,
+        textDisplay: data.snippet.textDisplay,
+        authorDisplayName: data.snippet.authorDisplayName,
+        authorProfileImageUrl: data.snippet.authorProfileImageUrl,
+        publishedAt: data.snippet.publishedAt,
+        likeCount: data.snippet.likeCount,
+      };
+    } catch (error) {
+      if (error instanceof YouTubeAPIError) {
+        throw error;
+      }
+      
+      throw new YouTubeAPIError(
+        'Failed to post reply',
+        'REPLY_ERROR',
+        0,
+        error
+      );
+    }
+  }
+
+  /**
+   * Delete a comment (requires OAuth token and ownership)
+   */
+  async deleteComment(
+    commentId: string,
+    accessToken: string
+  ): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/comments?id=${commentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        await this.handleAPIError(response);
+      }
+
+      return true;
+    } catch (error) {
+      if (error instanceof YouTubeAPIError) {
+        throw error;
+      }
+      
+      throw new YouTubeAPIError(
+        'Failed to delete comment',
+        'DELETE_ERROR',
+        0,
+        error
+      );
     }
   }
 

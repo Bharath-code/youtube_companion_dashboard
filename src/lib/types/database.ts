@@ -1,7 +1,15 @@
-import { User, Note, EventLog } from '@prisma/client'
+import { User, Note as PrismaNote, EventLog } from '@prisma/client'
 
 // Re-export Prisma types
-export type { User, Note, EventLog }
+export type { User, EventLog }
+
+// Extended Note type with parsed tags
+export interface Note extends Omit<PrismaNote, 'tags'> {
+  tags: string[]
+}
+
+// Raw Prisma Note type (for internal use)
+export type { PrismaNote }
 
 // Extended types with relationships
 export type UserWithRelations = User & {
@@ -78,7 +86,7 @@ export type DatabaseError = {
 export type PaginationOptions = {
   page?: number
   limit?: number
-  orderBy?: string
+  orderBy?: 'createdAt' | 'updatedAt' | 'content' | 'relevance'
   orderDirection?: 'asc' | 'desc'
 }
 
@@ -87,4 +95,5 @@ export type SearchOptions = {
   tags?: string[]
   videoId?: string
   userId?: string
+  includeHighlights?: boolean
 } & PaginationOptions

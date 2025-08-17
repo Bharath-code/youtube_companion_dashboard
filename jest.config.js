@@ -13,9 +13,13 @@ const customJestConfig = {
     '**/__tests__/**/*.(ts|tsx|js)',
     '**/*.(test|spec).(ts|tsx|js)'
   ],
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^next-auth/react$': '<rootDir>/__mocks__/next-auth-react.js',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(next-auth)/)'
+  ],
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

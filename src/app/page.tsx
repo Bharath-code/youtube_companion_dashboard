@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, Video, MessageSquare, StickyNote, Activity } from 'lucide-react';
+import { Loader2, Video, MessageSquare, StickyNote, User } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -43,6 +43,21 @@ export default function Home() {
         <CardContent>
           {isAuthenticated ? (
             <>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <h3 className="font-semibold text-blue-900 mb-2">✨ New Integrated Experience</h3>
+                <p className="text-blue-800 text-sm mb-3">
+                  Now you can manage video metadata and comments in one unified interface! Click on any video to access editing and comment management tools in the same place.
+                </p>
+                <div className="flex gap-2">
+                  <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <Link href="/videos">Browse My Videos</Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/video-details">Direct Video Manager</Link>
+                  </Button>
+                </div>
+              </div>
+              
               <p className="text-muted-foreground mb-6">
                 Access all your video management tools from the sidebar or use the quick actions below.
               </p>
@@ -50,13 +65,13 @@ export default function Home() {
                 <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
                   <Link href="/videos">
                     <Video className="h-6 w-6" />
-                    <span>Manage Videos</span>
+                    <span>Browse Videos</span>
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
-                  <Link href="/comments">
+                  <Link href="/video-details">
                     <MessageSquare className="h-6 w-6" />
-                    <span>View Comments</span>
+                    <span>Video Manager</span>
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
@@ -66,9 +81,9 @@ export default function Home() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
-                  <Link href="/activity">
-                    <Activity className="h-6 w-6" />
-                    <span>Activity Log</span>
+                  <Link href="/profile">
+                    <User className="h-6 w-6" />
+                    <span>Profile</span>
                   </Link>
                 </Button>
               </div>
@@ -114,12 +129,12 @@ export default function Home() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <MessageSquare className="h-5 w-5" />
-              <span>Comment Management</span>
+              <span>Integrated Management</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              Read, reply to, and manage comments on your videos. Engage with your audience effectively.
+              Edit video metadata and manage comments in one unified interface. No more switching between tabs!
             </p>
           </CardContent>
         </Card>
