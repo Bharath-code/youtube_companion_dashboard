@@ -1,0 +1,63 @@
+// Production Prisma schema file for PostgreSQL
+// This file is used when NODE_ENV=production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  image        String?
+  googleId     String    @unique
+  accessToken  String?
+  refreshToken String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  notes        Note[]
+  eventLogs    EventLog[]
+  
+  @@map("users")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  videoId   String
+  content   String
+  tags      String[] // PostgreSQL array support
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([videoId])
+  @@index([userId])
+  @@map("notes")
+}
+
+model EventLog {
+  id         String   @id @default(cuid())
+  eventType  String
+  entityType String
+  entityId   String
+  metadata   Json?    // PostgreSQL JSON support
+  timestamp  DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([eventType])
+  @@index([timestamp])
+  @@map("event_logs")
+}
