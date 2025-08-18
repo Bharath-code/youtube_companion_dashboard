@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
     // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
+      const clientIP = eventLogger.getClientIP(request);
+      const userAgent = eventLogger.getUserAgent(request);
+      await eventLogger.logAuthFailure('Authentication required in GET /api/notes/search', clientIP, userAgent);
       return NextResponse.json<APIResponse>({
         success: false,
         error: 'Authentication required',
