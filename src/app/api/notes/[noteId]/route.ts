@@ -14,13 +14,16 @@ const updateNoteSchema = z.object({
 
 // GET /api/notes/[noteId] - Get a specific note
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ noteId: string }> }
 ) {
   try {
     // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
+      const clientIP = eventLogger.getClientIP(request);
+      const userAgent = eventLogger.getUserAgent(request);
+      await eventLogger.logAuthFailure('Authentication required in GET /api/notes/[noteId]', clientIP, userAgent);
       return NextResponse.json<APIResponse>({
         success: false,
         error: 'Authentication required',
@@ -93,6 +96,9 @@ export async function PUT(
     // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
+      const clientIP = eventLogger.getClientIP(request);
+      const userAgent = eventLogger.getUserAgent(request);
+      await eventLogger.logAuthFailure('Authentication required in PUT /api/notes/[noteId]', clientIP, userAgent);
       return NextResponse.json<APIResponse>({
         success: false,
         error: 'Authentication required',
@@ -211,6 +217,9 @@ export async function DELETE(
     // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
+      const clientIP = eventLogger.getClientIP(request);
+      const userAgent = eventLogger.getUserAgent(request);
+      await eventLogger.logAuthFailure('Authentication required in DELETE /api/notes/[noteId]', clientIP, userAgent);
       return NextResponse.json<APIResponse>({
         success: false,
         error: 'Authentication required',

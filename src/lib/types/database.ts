@@ -50,7 +50,7 @@ export type CreateEventLogInput = {
   metadata?: Record<string, unknown>
   ipAddress?: string
   userAgent?: string
-  userId: string
+  userId?: string
 }
 
 // Event types enum
@@ -65,7 +65,8 @@ export enum EventType {
   SEARCH_PERFORMED = 'search_performed',
   USER_LOGIN = 'user_login',
   USER_LOGOUT = 'user_logout',
-  API_ERROR = 'api_error'
+  API_ERROR = 'api_error',
+  AUTH_ERROR = 'auth_error',
 }
 
 // Entity types enum
