@@ -98,6 +98,151 @@ src/
 └── ...
 ```
 
+## API Endpoints
+
+### Authentication
+- `GET /api/auth/session` - Get current user session
+- `POST /api/auth/signin` - Sign in with Google OAuth
+- `POST /api/auth/signout` - Sign out current user
+
+### Notes Management
+- `GET /api/notes` - Get all notes for authenticated user
+- `POST /api/notes` - Create a new note
+- `GET /api/notes/[noteId]` - Get specific note by ID
+- `PUT /api/notes/[noteId]` - Update specific note
+- `DELETE /api/notes/[noteId]` - Delete specific note
+- `GET /api/notes/search` - Search notes with query parameters
+- `GET /api/notes/suggestions` - Get note suggestions based on content
+- `GET /api/notes/tags` - Get all available tags
+
+### YouTube Integration
+- `GET /api/youtube/videos/[videoId]` - Get YouTube video details
+- `GET /api/youtube/videos/[videoId]/comments` - Get video comments
+- `POST /api/youtube/videos/[videoId]/comments` - Add comment to video
+- `DELETE /api/youtube/comments/[commentId]` - Delete comment
+- `GET /api/youtube/channels/[channelId]` - Get channel information
+
+### Event Logging & Analytics
+- `GET /api/events` - Get event logs (paginated, filtered)
+- `GET /api/events/analytics` - Get event analytics and statistics
+- `POST /api/events/track` - Track client-side events
+
+### User Management
+- `GET /api/user/profile` - Get user profile information
+- `PUT /api/user/profile` - Update user profile
+
+## Database Schema
+
+### Core Models
+
+#### User
+```sql
+User {
+  id          String   @id @default(cuid())
+  name        String?
+  email       String   @unique
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  accounts    Account[]
+  sessions    Session[]
+  notes       Note[]
+  eventLogs   EventLog[]
+}
+```
+
+#### Note
+```sql
+Note {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  tags        String[] @default([])
+  videoId     String?
+  timestamp   Float?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([userId])
+  @@index([videoId])
+  @@index([createdAt])
+}
+```
+
+#### EventLog
+```sql
+EventLog {
+  id          String   @id @default(cuid())
+  eventType   String   // Enum: video_viewed, note_created, search_performed, etc.
+  entityType  String   // Enum: user, video, note, comment, page, button, etc.
+  entityId    String
+  metadata    Json     @default("{}")
+  timestamp   DateTime @default(now())
+  ipAddress   String?
+  userAgent   String?
+  userId      String
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([userId])
+  @@index([eventType])
+  @@index([entityType])
+  @@index([timestamp])
+  @@index([userId, timestamp])
+}
+```
+
+### Event Types
+
+#### Video Events
+- `video_viewed` - Video was viewed/loaded
+- `video_played` - Video playback started
+- `video_paused` - Video playback paused
+- `video_seeked` - Video timeline was seeked
+
+#### Note Events
+- `note_created` - New note was created
+- `note_updated` - Existing note was modified
+- `note_deleted` - Note was deleted
+
+#### Search Events
+- `search_performed` - Search query was executed
+- `search_suggestion_clicked` - Search suggestion was selected
+
+#### UI Events
+- `page_view` - Page was visited
+- `button_click` - Button was clicked
+- `form_submit` - Form was submitted
+- `modal_open` - Modal dialog was opened
+- `modal_close` - Modal dialog was closed
+
+#### Error Events
+- `api_error` - Server-side API error occurred
+- `client_error` - Client-side JavaScript error
+- `network_error` - Network connectivity issue
+
+### Entity Types
+- `user` - User-related events
+- `video` - YouTube video-related events
+- `note` - Note-related events
+- `comment` - Comment-related events
+- `page` - Page navigation events
+- `button` - UI button interactions
+- `form` - Form interactions
+- `modal` - Modal dialog events
+- `search` - Search-related events
+- `system` - System/application events
+
 ## Environment Variables
 
 | Variable               | Description                | Required |

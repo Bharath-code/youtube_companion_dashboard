@@ -55,17 +55,45 @@ export type CreateEventLogInput = {
 
 // Event types enum
 export enum EventType {
+  // Video events
   VIDEO_VIEWED = 'video_viewed',
   VIDEO_UPDATED = 'video_updated',
+  VIDEO_LOADED = 'video_loaded',
+  VIDEO_PLAYED = 'video_played',
+  VIDEO_PAUSED = 'video_paused',
+  VIDEO_SEEKED = 'video_seeked',
+  
+  // Comment events
   COMMENT_ADDED = 'comment_added',
   COMMENT_DELETED = 'comment_deleted',
+  
+  // Note events
   NOTE_CREATED = 'note_created',
   NOTE_UPDATED = 'note_updated',
   NOTE_DELETED = 'note_deleted',
+  
+  // Search events
   SEARCH_PERFORMED = 'search_performed',
+  SEARCH_SUGGESTION_CLICKED = 'search_suggestion_clicked',
+  
+  // User events
   USER_LOGIN = 'user_login',
   USER_LOGOUT = 'user_logout',
-  API_ERROR = 'api_error'
+  
+  // UI events
+  PAGE_VIEW = 'page_view',
+  BUTTON_CLICK = 'button_click',
+  FORM_SUBMIT = 'form_submit',
+  MODAL_OPEN = 'modal_open',
+  MODAL_CLOSE = 'modal_close',
+  TAB_SWITCH = 'tab_switch',
+  FILTER_APPLIED = 'filter_applied',
+  EXPORT_INITIATED = 'export_initiated',
+  
+  // Error events
+  API_ERROR = 'api_error',
+  CLIENT_ERROR = 'client_error',
+  NETWORK_ERROR = 'network_error'
 }
 
 // Entity types enum
@@ -73,7 +101,15 @@ export enum EntityType {
   USER = 'user',
   VIDEO = 'video',
   NOTE = 'note',
-  COMMENT = 'comment'
+  COMMENT = 'comment',
+  PAGE = 'page',
+  BUTTON = 'button',
+  FORM = 'form',
+  MODAL = 'modal',
+  TAB = 'tab',
+  FILTER = 'filter',
+  SEARCH = 'search',
+  SYSTEM = 'system'
 }
 
 // Database utility types

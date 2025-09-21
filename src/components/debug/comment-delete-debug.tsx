@@ -16,7 +16,7 @@ export function CommentDeleteDebug() {
       const result = await response.json();
       setTestResults(result);
     } catch (error) {
-      setTestResults({ error: error.message });
+      setTestResults({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   };
 

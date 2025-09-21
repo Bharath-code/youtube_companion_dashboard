@@ -630,7 +630,7 @@ if (data.items && Array.isArray(data.items) && data.items.length > 0) {
 
 // Case 2: videos.update style (single object)
 if (data.kind === 'youtube#video' && data.id) {
-  return this.transformAuthVideoDetails(data as YouTubeAPIVideoItem);
+  return this.transformAuthVideoDetails(data as any);
 }
 
    /* if (!data.items || data.items.length === 0) {

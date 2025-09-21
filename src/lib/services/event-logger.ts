@@ -112,6 +112,121 @@ export class EventLogger {
   }
 
   /**
+   * Log a page view event
+   */
+  async logPageView(userId: string, page: string, metadata?: Record<string, unknown>, ipAddress?: string, userAgent?: string): Promise<void> {
+    await this.logEvent({
+      eventType: EventType.PAGE_VIEW,
+      entityType: EntityType.PAGE,
+      entityId: page,
+      metadata: metadata || {},
+      ipAddress,
+      userAgent,
+      userId,
+    });
+  }
+
+  /**
+   * Log a button click event
+   */
+  async logButtonClick(userId: string, buttonId: string, metadata?: Record<string, unknown>, ipAddress?: string, userAgent?: string): Promise<void> {
+    await this.logEvent({
+      eventType: EventType.BUTTON_CLICK,
+      entityType: EntityType.BUTTON,
+      entityId: buttonId,
+      metadata: metadata || {},
+      ipAddress,
+      userAgent,
+      userId,
+    });
+  }
+
+  /**
+   * Log a form submission event
+   */
+  async logFormSubmit(userId: string, formId: string, metadata?: Record<string, unknown>, ipAddress?: string, userAgent?: string): Promise<void> {
+    await this.logEvent({
+      eventType: EventType.FORM_SUBMIT,
+      entityType: EntityType.FORM,
+      entityId: formId,
+      metadata: metadata || {},
+      ipAddress,
+      userAgent,
+      userId,
+    });
+  }
+
+  /**
+   * Log a modal open event
+   */
+  async logModalOpen(userId: string, modalId: string, metadata?: Record<string, unknown>, ipAddress?: string, userAgent?: string): Promise<void> {
+    await this.logEvent({
+      eventType: EventType.MODAL_OPEN,
+      entityType: EntityType.MODAL,
+      entityId: modalId,
+      metadata: metadata || {},
+      ipAddress,
+      userAgent,
+      userId,
+    });
+  }
+
+  /**
+   * Log a modal close event
+   */
+  async logModalClose(userId: string, modalId: string, metadata?: Record<string, unknown>, ipAddress?: string, userAgent?: string): Promise<void> {
+    await this.logEvent({
+      eventType: EventType.MODAL_CLOSE,
+      entityType: EntityType.MODAL,
+      entityId: modalId,
+      metadata: metadata || {},
+      ipAddress,
+      userAgent,
+      userId,
+    });
+  }
+
+  /**
+   * Log a client error event
+   */
+  async logClientError(userId: string, error: Error, metadata?: Record<string, unknown>, ipAddress?: string, userAgent?: string): Promise<void> {
+    await this.logEvent({
+      eventType: EventType.CLIENT_ERROR,
+      entityType: EntityType.SYSTEM,
+      entityId: 'client_error',
+      metadata: {
+        error: error.message,
+        stack: error.stack,
+        ...metadata,
+      },
+      ipAddress,
+      userAgent,
+      userId,
+    });
+  }
+
+  /**
+   * Log a video interaction event
+   */
+  async logVideoInteraction(userId: string, videoId: string, action: 'played' | 'paused' | 'seeked', metadata?: Record<string, unknown>, ipAddress?: string, userAgent?: string): Promise<void> {
+    const eventTypeMap = {
+      played: EventType.VIDEO_PLAYED,
+      paused: EventType.VIDEO_PAUSED,
+      seeked: EventType.VIDEO_SEEKED,
+    };
+
+    await this.logEvent({
+      eventType: eventTypeMap[action],
+      entityType: EntityType.VIDEO,
+      entityId: videoId,
+      metadata: metadata || {},
+      ipAddress,
+      userAgent,
+      userId,
+    });
+  }
+
+  /**
    * Get client IP address from request headers
    */
   getClientIP(request: Request): string | undefined {

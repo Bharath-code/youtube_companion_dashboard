@@ -21,7 +21,7 @@ export async function GET() {
       }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: {
         id: true,
@@ -36,10 +36,25 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json<APIResponse>({
-        success: false,
-        error: 'User not found',
-      }, { status: 404 });
+      // Create user if they don't exist (since we're using JWT strategy)
+      const newUser = await prisma.user.create({
+        data: {
+          email: session.user.email,
+          name: session.user.name,
+          image: session.user.image,
+        },
+        select: {
+          id: true,
+          name: true,
+          displayName: true,
+          username: true,
+          email: true,
+          image: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+      user = newUser;
     }
 
     return NextResponse.json<APIResponse<typeof user>>({
@@ -67,15 +82,19 @@ export async function PUT(request: NextRequest) {
       }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
 
     if (!user) {
-      return NextResponse.json<APIResponse>({
-        success: false,
-        error: 'User not found',
-      }, { status: 404 });
+      // Create user if they don't exist (since we're using JWT strategy)
+      user = await prisma.user.create({
+        data: {
+          email: session.user.email,
+          name: session.user.name,
+          image: session.user.image,
+        },
+      });
     }
 
     // Parse and validate request body

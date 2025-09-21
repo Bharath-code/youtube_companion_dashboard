@@ -17,9 +17,10 @@ interface UserProfile {
   displayName: string | null;
   username: string | null;
   email: string;
+  emailVerified: Date | null;
   image: string | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface ProfileSettingsProps {
@@ -67,7 +68,13 @@ export function ProfileSettings({ className }: ProfileSettingsProps) {
       }
 
       if (result.success && result.data) {
-        setProfile(result.data);
+        const profileData = {
+          ...result.data,
+          createdAt: new Date(result.data.createdAt),
+          updatedAt: new Date(result.data.updatedAt),
+          emailVerified: result.data.emailVerified ? new Date(result.data.emailVerified) : null,
+        };
+        setProfile(profileData);
         setDisplayName(result.data.displayName || '');
         setUsername(result.data.username || '');
       }

@@ -1,10 +1,7 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -17,33 +14,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
-      // Persist the OAuth access_token to the token right after signin
+    async jwt({ token, account, user }) {
       if (account) {
         token.accessToken = account.access_token
         token.refreshToken = account.refresh_token
         
         // Fetch YouTube channel information on first sign in
-        if (account.access_token) {
-          try {
-            const response = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
-              headers: {
-                'Authorization': `Bearer ${account.access_token}`,
-              },
-            });
-            
-            if (response.ok) {
-              const data = await response.json();
-              if (data.items && data.items.length > 0) {
-                const channel = data.items[0];
-                token.youtubeChannelId = channel.id;
-                token.youtubeChannelTitle = channel.snippet.title;
-              }
+        try {
+          const response = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+            headers: {
+              'Authorization': `Bearer ${account.access_token}`,
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.items && data.items.length > 0) {
+              token.youtubeChannelId = data.items[0].id;
+              token.youtubeChannelTitle = data.items[0].snippet.title;
             }
-          } catch (error) {
-            console.error('Failed to fetch YouTube channel info:', error);
-            // Continue without channel info - not critical for auth
           }
+        } catch (error) {
+          console.error('Failed to fetch YouTube channel info:', error);
+          // Continue without channel info - not critical for auth
         }
       }
       return token

@@ -30,16 +30,20 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // Get user from database
-    const user = await prisma.user.findUnique({
+    // Get or create user in database
+    let user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
 
     if (!user) {
-      return NextResponse.json<APIResponse>({
-        success: false,
-        error: 'User not found',
-      }, { status: 404 });
+      // Create user if they don't exist (since we're using JWT strategy)
+      user = await prisma.user.create({
+        data: {
+          email: session.user.email,
+          name: session.user.name,
+          image: session.user.image,
+        },
+      });
     }
 
     // Check rate limit

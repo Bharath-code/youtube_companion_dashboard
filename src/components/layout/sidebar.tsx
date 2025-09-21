@@ -46,10 +46,10 @@ const navigationItems = [
     description: 'Personal notes and tags'
   },
   {
-    title: 'Activity Log',
-    href: '/activity',
+    title: 'Events',
+    href: '/events',
     icon: Activity,
-    description: 'View system events'
+    description: 'View activity and event statistics'
   }
 ];
 

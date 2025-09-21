@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { createAuthenticatedYouTubeService, YouTubeAPIError } from '@/lib/services/youtube-auth';
+import { createAuthenticatedYouTubeService } from '@/lib/services/youtube-auth';
+import { YouTubeAPIError } from '@/lib/services/youtube';
 import { APIResponse } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const session = await auth();
+    const session = await auth() as any;
     if (!session?.accessToken) {
       return NextResponse.json<APIResponse>({
         success: false,
-        error: 'Authentication required',
+        error: 'YouTube access token not found. Please reconnect your account.',
       }, { status: 401 });
     }
 
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json<APIResponse>({
       success: false,
-      error: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Internal server error',
     }, { status: 500 });
   }
 }

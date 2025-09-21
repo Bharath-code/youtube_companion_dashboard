@@ -17,7 +17,17 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+const mockPrisma = {
+  note: {
+    create: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
+    groupBy: jest.fn(),
+  },
+} as any;
 
 describe('NotesService', () => {
   let notesService: NotesService;

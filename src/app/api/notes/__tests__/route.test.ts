@@ -4,7 +4,9 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 // Mock dependencies
-jest.mock('@/lib/auth');
+jest.mock('@/lib/auth', () => ({
+  auth: jest.fn(),
+}));
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
@@ -18,8 +20,17 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-const mockAuth = auth as jest.MockedFunction<typeof auth>;
-const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+const mockAuth = auth as any;
+const mockPrisma = {
+  user: {
+    findUnique: jest.fn(),
+  },
+  note: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+  },
+} as any;
 
 describe('/api/notes', () => {
   const mockUser = {
