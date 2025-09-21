@@ -50,7 +50,7 @@ export type CreateEventLogInput = {
   metadata?: Record<string, unknown>
   ipAddress?: string
   userAgent?: string
-  userId?: string
+  userId: string
 }
 
 // Event types enum

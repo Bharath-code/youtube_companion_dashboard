@@ -16,7 +16,7 @@ export class EventLogger {
    */
   async logEvent(input: CreateEventLogInput): Promise<void> {
     try {
-      const { userId, metadata, ...rest } = input;
+      const { metadata, ...rest } = input;
       
       interface EventLogData {
         eventType: string;
@@ -25,16 +25,13 @@ export class EventLogger {
         metadata: string | null;
         ipAddress?: string;
         userAgent?: string;
-        userId?: string;
+        userId: string;
       }
       
       const data: EventLogData = {
         ...rest,
         metadata: metadata ? JSON.stringify(metadata) : null,
       };
-      if (userId) {
-        data.userId = userId;
-      }
 
       await prisma.eventLog.create({ data });
     } catch (error) {
@@ -48,7 +45,7 @@ export class EventLogger {
           entityType: string;
           entityId: string;
           metadata: string;
-          userId?: string;
+          userId: string;
         }
         
         const failureData: FailureEventLogData = {
@@ -59,11 +56,8 @@ export class EventLogger {
             originalEvent: input,
             error: error instanceof Error ? error.message : 'Unknown error',
           }),
+          userId: input.userId || 'system',
         };
-
-        if (input.userId) {
-          failureData.userId = input.userId;
-        }
 
         await prisma.eventLog.create({
           data: failureData,
@@ -100,6 +94,7 @@ export class EventLogger {
       metadata: { reason },
       ipAddress,
       userAgent,
+      userId: 'system', // Use system user for auth failures
     });
   }
 
