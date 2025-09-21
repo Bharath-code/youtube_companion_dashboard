@@ -50,7 +50,7 @@ export type CreateEventLogInput = {
   metadata?: Record<string, unknown>
   ipAddress?: string
   userAgent?: string
-  userId: string
+  userId?: string
 }
 
 // Event types enum
@@ -76,11 +76,11 @@ export enum EventType {
   SEARCH_PERFORMED = 'search_performed',
   SEARCH_SUGGESTION_CLICKED = 'search_suggestion_clicked',
   
-  // User events
+  // Authentication events
   USER_LOGIN = 'user_login',
   USER_LOGOUT = 'user_logout',
   
-  // UI events
+  // UI interaction events
   PAGE_VIEW = 'page_view',
   BUTTON_CLICK = 'button_click',
   FORM_SUBMIT = 'form_submit',
@@ -93,7 +93,8 @@ export enum EventType {
   // Error events
   API_ERROR = 'api_error',
   CLIENT_ERROR = 'client_error',
-  NETWORK_ERROR = 'network_error'
+  NETWORK_ERROR = 'network_error',
+  AUTH_ERROR = 'auth_error'
 }
 
 // Entity types enum

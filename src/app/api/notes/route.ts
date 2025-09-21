@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
     // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
+      const clientIP = eventLogger.getClientIP(request);
+      const userAgent = eventLogger.getUserAgent(request);
+      await eventLogger.logAuthFailure('Authentication required in GET /api/notes', clientIP, userAgent);
       return NextResponse.json<APIResponse>({
         success: false,
         error: 'Authentication required',
@@ -192,6 +195,9 @@ export async function POST(request: NextRequest) {
     // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
+      const clientIP = eventLogger.getClientIP(request);
+      const userAgent = eventLogger.getUserAgent(request);
+      await eventLogger.logAuthFailure('Authentication required in POST /api/notes', clientIP, userAgent);
       return NextResponse.json<APIResponse>({
         success: false,
         error: 'Authentication required',

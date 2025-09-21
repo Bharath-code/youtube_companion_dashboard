@@ -16,34 +16,38 @@ export class EventLogger {
    */
   async logEvent(input: CreateEventLogInput): Promise<void> {
     try {
-      await prisma.eventLog.create({
-        data: {
-          eventType: input.eventType,
-          entityType: input.entityType,
-          entityId: input.entityId,
-          metadata: input.metadata ? JSON.stringify(input.metadata) : null,
-          ipAddress: input.ipAddress,
-          userAgent: input.userAgent,
-          userId: input.userId,
-        },
-      });
+      const { userId, metadata, ...rest } = input;
+      const data: any = {
+        ...rest,
+        metadata: metadata ? JSON.stringify(metadata) : null,
+      };
+      if (userId) {
+        data.userId = userId;
+      }
+
+      await prisma.eventLog.create({ data });
     } catch (error) {
       // Log the logging failure but don't throw - requirement 7.6
       console.error('Failed to log event:', error);
       
       // Attempt to log the logging failure
       try {
+        const failureData: any = {
+          eventType: EventType.API_ERROR,
+          entityType: EntityType.USER,
+          entityId: input.userId || 'system',
+          metadata: JSON.stringify({
+            originalEvent: input,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          }),
+        };
+
+        if (input.userId) {
+          failureData.userId = input.userId;
+        }
+
         await prisma.eventLog.create({
-          data: {
-            eventType: EventType.API_ERROR,
-            entityType: EntityType.USER,
-            entityId: input.userId,
-            metadata: JSON.stringify({
-              originalEvent: input,
-              error: error instanceof Error ? error.message : 'Unknown error',
-            }),
-            userId: input.userId,
-          },
+          data: failureData,
         });
       } catch (loggingError) {
         console.error('Failed to log the logging failure:', loggingError);
@@ -63,6 +67,20 @@ export class EventLogger {
       ipAddress,
       userAgent,
       userId,
+    });
+  }
+
+  /**
+   * Log an authentication failure event
+   */
+  async logAuthFailure(reason: string, ipAddress?: string, userAgent?: string): Promise<void> {
+    await this.logEvent({
+      eventType: EventType.AUTH_ERROR,
+      entityType: EntityType.USER,
+      entityId: 'auth_failure',
+      metadata: { reason },
+      ipAddress,
+      userAgent,
     });
   }
 
