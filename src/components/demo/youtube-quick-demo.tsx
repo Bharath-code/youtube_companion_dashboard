@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,9 +60,11 @@ export function YouTubeQuickDemo() {
         {video && (
           <div className="space-y-4">
             <div className="aspect-video bg-gray-100 rounded overflow-hidden">
-              <img
+              <Image
                 src={getBestThumbnail(video.thumbnails)}
                 alt={video.title}
+                width={640}
+                height={360}
                 className="w-full h-full object-cover"
               />
             </div>

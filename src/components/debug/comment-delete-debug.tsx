@@ -5,9 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
+interface TestResults {
+  error?: string;
+  [key: string]: unknown;
+}
+
 export function CommentDeleteDebug() {
   const { data: session } = useSession();
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<TestResults | null>(null);
 
   const testCommentAPI = async () => {
     try {

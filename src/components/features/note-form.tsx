@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { Note, APIResponse } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -143,9 +144,11 @@ export function NoteForm({ videoId, onNoteCreated, className, compact = false }:
         {/* User info */}
         <div className="flex items-center gap-3">
           {getUserAvatar(userProfile, session) ? (
-            <img
+            <Image
               src={getUserAvatar(userProfile, session)!}
               alt={getUserDisplayName(userProfile, session)}
+              width={32}
+              height={32}
               className="w-8 h-8 rounded-full"
             />
           ) : (

@@ -1,5 +1,4 @@
 import { NotesService } from '../notes';
-import { prisma } from '@/lib/prisma';
 import { CreateNoteInput, UpdateNoteInput } from '@/lib/types';
 
 // Mock Prisma
@@ -17,6 +16,16 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
+interface MockPrismaNote {
+  create: jest.MockedFunction<(args: { data: CreateNoteInput }) => Promise<{ id: string; videoId: string; content: string; tags: string; userId: string; createdAt: Date; updatedAt: Date }>>;
+  findFirst: jest.MockedFunction<(args?: { where?: Record<string, unknown> }) => Promise<{ id: string; videoId: string; content: string; tags: string; userId: string; createdAt: Date; updatedAt: Date } | null>>;
+  findMany: jest.MockedFunction<(args?: { where?: Record<string, unknown>; orderBy?: Record<string, unknown>; skip?: number; take?: number }) => Promise<Array<{ id: string; videoId: string; content: string; tags: string; userId: string; createdAt: Date; updatedAt: Date }>>>;
+  update: jest.MockedFunction<(args: { where: { id: string }; data: Partial<UpdateNoteInput> }) => Promise<{ id: string; videoId: string; content: string; tags: string; userId: string; createdAt: Date; updatedAt: Date }>>;
+  delete: jest.MockedFunction<(args: { where: { id: string } }) => Promise<{ id: string; videoId: string; content: string; tags: string; userId: string; createdAt: Date; updatedAt: Date }>>;
+  count: jest.MockedFunction<(args?: { where?: Record<string, unknown> }) => Promise<number>>;
+  groupBy: jest.MockedFunction<(args: { by: string[]; where?: Record<string, unknown> }) => Promise<Array<Record<string, unknown>>>>;
+}
+
 const mockPrisma = {
   note: {
     create: jest.fn(),
@@ -27,7 +36,7 @@ const mockPrisma = {
     count: jest.fn(),
     groupBy: jest.fn(),
   },
-} as any;
+} as { note: MockPrismaNote };
 
 describe('NotesService', () => {
   let notesService: NotesService;

@@ -4,9 +4,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { NotesPanel } from '@/components/features/notes-panel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Search, Tag, TestTube } from 'lucide-react';
 
 export default function TestSearchPage() {
@@ -80,7 +78,7 @@ export default function TestSearchPage() {
           <div className="p-4 bg-blue-50 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">Test Instructions:</h4>
             <ol className="text-sm text-blue-800 space-y-1">
-              <li>1. Create some notes with different tags (e.g., "tutorial", "music", "favorite")</li>
+              <li>1. Create some notes with different tags (e.g., &quot;tutorial&quot;, &quot;music&quot;, &quot;favorite&quot;)</li>
               <li>2. Try searching for content within your notes</li>
               <li>3. Test tag filtering by clicking on available tags</li>
               <li>4. Use the search suggestions that appear as you type</li>

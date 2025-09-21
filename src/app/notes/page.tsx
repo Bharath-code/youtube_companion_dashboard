@@ -180,7 +180,7 @@ export default function NotesPage() {
           <div className="p-4 bg-blue-50 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">💡 Pro Tips</h4>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Use descriptive tags like "tutorial", "idea", "bug", "feature"</li>
+              <li>• Use descriptive tags like &quot;tutorial&quot;, &quot;idea&quot;, &quot;bug&quot;, &quot;feature&quot;</li>
               <li>• Search for partial words to find related content</li>
               <li>• Filter by video to see notes for specific content</li>
               <li>• Edit notes anytime by clicking the edit button</li>

@@ -10,7 +10,7 @@ interface EventStats {
 }
 
 export default function EventsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [stats, setStats] = useState<EventStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

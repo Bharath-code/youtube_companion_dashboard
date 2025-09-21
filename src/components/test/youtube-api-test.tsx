@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { fetchVideoDetails, fetchVideoComments } from '@/lib/utils/youtube-helpers';
 import { VideoDetails, Comment } from '@/lib/types';
+import Image from 'next/image';
 
 export default function YouTubeAPITest() {
   const [videoId, setVideoId] = useState('dQw4w9WgXcQ'); // Default to Rick Roll
@@ -106,9 +107,11 @@ export default function YouTubeAPITest() {
             
             {videoDetails.thumbnails.length > 0 && (
               <div className="mt-4">
-                <img
+                <Image
                   src={videoDetails.thumbnails[0].url}
                   alt={videoDetails.title}
+                  width={192}
+                  height={108}
                   className="w-48 h-auto rounded-md"
                 />
               </div>
@@ -131,9 +134,11 @@ export default function YouTubeAPITest() {
               {comments.map((comment) => (
                 <div key={comment.id} className="border-b border-gray-200 pb-3 last:border-b-0">
                   <div className="flex items-start space-x-3">
-                    <img
+                    <Image
                       src={comment.authorProfileImageUrl}
                       alt={comment.authorDisplayName}
+                      width={32}
+                      height={32}
                       className="w-8 h-8 rounded-full"
                     />
                     <div className="flex-1">

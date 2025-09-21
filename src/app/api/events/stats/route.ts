@@ -3,7 +3,14 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { APIResponse } from '@/lib/types';
 
-export async function GET(request: NextRequest) {
+interface EventStat {
+  eventType: string;
+  _count: {
+    id: number;
+  };
+}
+
+export async function GET(_request: NextRequest) {
   try {
     // Check authentication
     const session = await auth();
@@ -15,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get or create user in database
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
 
@@ -37,7 +44,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const formattedStats = stats.reduce((acc: Record<string, number>, stat: any) => {
+    const formattedStats = stats.reduce((acc: Record<string, number>, stat: EventStat) => {
       acc[stat.eventType] = stat._count.id;
       return acc;
     }, {} as Record<string, number>);

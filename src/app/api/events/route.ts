@@ -4,6 +4,17 @@ import { prisma } from '@/lib/prisma';
 import { APIResponse } from '@/lib/types';
 import { z } from 'zod';
 
+interface EventWhereClause {
+  userId: string;
+  eventType?: string;
+  entityType?: string;
+  entityId?: string;
+  timestamp?: {
+    gte?: Date;
+    lte?: Date;
+  };
+}
+
 // Schema for query parameters
 const eventsQuerySchema = z.object({
   page: z.coerce.number().min(1).optional().default(1),
@@ -63,7 +74,7 @@ export async function GET(request: NextRequest) {
     } = validatedParams;
 
     // Build where clause
-    const whereClause: any = {
+    const whereClause: EventWhereClause = {
       userId: user.id,
     };
 

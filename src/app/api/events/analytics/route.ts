@@ -4,6 +4,10 @@ import { prisma } from '@/lib/prisma';
 import { APIResponse } from '@/lib/types';
 import { z } from 'zod';
 
+interface EventMetadata {
+  [key: string]: string | number | boolean | null;
+}
+
 // Schema for analytics query parameters
 const analyticsQuerySchema = z.object({
   period: z.enum(['day', 'week', 'month', 'year']).optional().default('week'),
@@ -35,7 +39,7 @@ interface EventAnalytics {
     eventType: string;
     entityType: string;
     entityId: string;
-    metadata: any;
+    metadata: EventMetadata;
   }>;
 }
 
@@ -72,7 +76,7 @@ export async function GET(request: NextRequest) {
     const queryParams = Object.fromEntries(searchParams.entries());
     const validatedParams = analyticsQuerySchema.parse(queryParams);
     
-    const { period, startDate, endDate, groupBy } = validatedParams;
+    const { period, startDate, endDate } = validatedParams;
 
     // Calculate date range based on period
     const now = new Date();

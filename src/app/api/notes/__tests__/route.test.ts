@@ -1,7 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest } from 'next/server';
 import { GET, POST } from '../route';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+
+// Mock types for testing
+type MockAuth = jest.MockedFunction<any>;
+type MockPrisma = {
+  user: {
+    findUnique: jest.MockedFunction<any>;
+  };
+  note: {
+    create: jest.MockedFunction<any>;
+    findMany: jest.MockedFunction<any>;
+    count: jest.MockedFunction<any>;
+  };
+};
 
 // Mock dependencies
 jest.mock('@/lib/auth', () => ({
@@ -20,7 +33,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-const mockAuth = auth as any;
+const mockAuth = auth as MockAuth;
 const mockPrisma = {
   user: {
     findUnique: jest.fn(),
@@ -30,7 +43,7 @@ const mockPrisma = {
     findMany: jest.fn(),
     count: jest.fn(),
   },
-} as any;
+} as MockPrisma;
 
 describe('/api/notes', () => {
   const mockUser = {

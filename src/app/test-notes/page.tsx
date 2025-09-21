@@ -28,7 +28,7 @@ export default function TestNotesPage() {
       } else {
         setError(data.error || 'Failed to fetch notes');
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Network error');
     } finally {
       setLoading(false);
@@ -61,7 +61,7 @@ export default function TestNotesPage() {
       } else {
         setError(data.error || 'Failed to create note');
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Network error');
     } finally {
       setLoading(false);
@@ -84,7 +84,7 @@ export default function TestNotesPage() {
       } else {
         setError(data.error || 'Failed to delete note');
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Network error');
     } finally {
       setLoading(false);

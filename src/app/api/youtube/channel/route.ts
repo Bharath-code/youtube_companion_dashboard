@@ -4,10 +4,10 @@ import { createAuthenticatedYouTubeService } from '@/lib/services/youtube-auth';
 import { YouTubeAPIError } from '@/lib/services/youtube';
 import { APIResponse } from '@/lib/types';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check authentication
-    const session = await auth() as any;
+    const session = await auth();
     if (!session?.accessToken) {
       return NextResponse.json<APIResponse>({
         success: false,

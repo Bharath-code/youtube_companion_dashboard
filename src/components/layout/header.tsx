@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { LogOut, User, Youtube } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -24,9 +25,11 @@ export function Header() {
               {/* User Profile */}
               <div className="flex items-center space-x-2">
                 {user.image ? (
-                  <img
+                  <Image
                     src={user.image}
                     alt={user.name || 'User'}
+                    width={32}
+                    height={32}
                     className="h-8 w-8 rounded-full"
                   />
                 ) : (

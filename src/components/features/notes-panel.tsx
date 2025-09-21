@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Note, APIResponse } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,7 +49,6 @@ export function NotesPanel({ videoId, className }: NotesPanelProps) {
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
 
@@ -85,7 +84,7 @@ export function NotesPanel({ videoId, className }: NotesPanelProps) {
   const [deletingNote, setDeletingNote] = useState<string | null>(null);
 
   // Fetch notes from API
-  const fetchNotes = async (page = 1, append = false) => {
+  const fetchNotes = useCallback(async (page = 1, append = false) => {
     if (!session) return;
 
     setLoading(true);
@@ -125,7 +124,6 @@ export function NotesPanel({ videoId, className }: NotesPanelProps) {
       }
 
       setCurrentPage(data.pagination.page);
-      setTotalPages(data.pagination.totalPages);
       setTotalCount(data.pagination.totalCount);
       setHasMore(data.pagination.hasNext);
     } catch (err) {
@@ -135,10 +133,10 @@ export function NotesPanel({ videoId, className }: NotesPanelProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session, videoId, searchQuery, selectedTags]);
 
   // Fetch available tags
-  const fetchTags = async () => {
+  const fetchTags = useCallback(async () => {
     if (!session) return;
 
     try {
@@ -151,7 +149,7 @@ export function NotesPanel({ videoId, className }: NotesPanelProps) {
     } catch (err) {
       console.error('Error fetching tags:', err);
     }
-  };
+  }, [session]);
 
   // Fetch search suggestions
   const fetchSearchSuggestions = async (query: string) => {
@@ -216,16 +214,6 @@ export function NotesPanel({ videoId, className }: NotesPanelProps) {
     }
     setShowSuggestions(false);
   };
-
-  // Load initial notes and tags
-  useEffect(() => {
-    if (session) {
-      setNotes([]);
-      setCurrentPage(1);
-      fetchNotes(1);
-      fetchTags();
-    }
-  }, [session, videoId, searchQuery, selectedTags]);
 
   // Cleanup debounce timer on unmount
   useEffect(() => {
@@ -426,6 +414,16 @@ export function NotesPanel({ videoId, className }: NotesPanelProps) {
       return 'Unknown time';
     }
   };
+
+  // Load initial notes and tags
+  useEffect(() => {
+    if (session) {
+      setNotes([]);
+      setCurrentPage(1);
+      fetchNotes(1);
+      fetchTags();
+    }
+  }, [session, videoId, searchQuery, selectedTags, fetchNotes, fetchTags]);
 
   if (!session) {
     return (

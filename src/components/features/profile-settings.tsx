@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -189,9 +190,11 @@ export function ProfileSettings({ className }: ProfileSettingsProps) {
           <h4 className="font-medium mb-2">Current Display</h4>
           <div className="flex items-center gap-3">
             {session.user?.image ? (
-              <img
+              <Image
                 src={session.user.image}
                 alt="Profile"
+                width={40}
+                height={40}
                 className="w-10 h-10 rounded-full"
               />
             ) : (

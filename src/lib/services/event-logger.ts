@@ -17,7 +17,18 @@ export class EventLogger {
   async logEvent(input: CreateEventLogInput): Promise<void> {
     try {
       const { userId, metadata, ...rest } = input;
-      const data: any = {
+      
+      interface EventLogData {
+        eventType: string;
+        entityType: string;
+        entityId: string;
+        metadata: string | null;
+        ipAddress?: string;
+        userAgent?: string;
+        userId?: string;
+      }
+      
+      const data: EventLogData = {
         ...rest,
         metadata: metadata ? JSON.stringify(metadata) : null,
       };
@@ -32,7 +43,15 @@ export class EventLogger {
       
       // Attempt to log the logging failure
       try {
-        const failureData: any = {
+        interface FailureEventLogData {
+          eventType: string;
+          entityType: string;
+          entityId: string;
+          metadata: string;
+          userId?: string;
+        }
+        
+        const failureData: FailureEventLogData = {
           eventType: EventType.API_ERROR,
           entityType: EntityType.USER,
           entityId: input.userId || 'system',

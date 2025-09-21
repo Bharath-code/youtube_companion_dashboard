@@ -630,7 +630,27 @@ if (data.items && Array.isArray(data.items) && data.items.length > 0) {
 
 // Case 2: videos.update style (single object)
 if (data.kind === 'youtube#video' && data.id) {
-  return this.transformAuthVideoDetails(data as any);
+  type YouTubeVideoItem = {
+    id: string;
+    snippet: {
+      title: string;
+      description: string;
+      publishedAt: string;
+      channelId: string;
+      channelTitle: string;
+      thumbnails: Record<string, { url: string; width: number; height: number }>;
+    };
+    statistics?: {
+      viewCount?: string;
+      likeCount?: string;
+      commentCount?: string;
+    };
+    status?: {
+      privacyStatus: string;
+    };
+  };
+  
+  return this.transformAuthVideoDetails(data as YouTubeVideoItem);
 }
 
    /* if (!data.items || data.items.length === 0) {

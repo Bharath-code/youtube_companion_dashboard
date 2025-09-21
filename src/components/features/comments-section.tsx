@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { Comment } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +13,6 @@ import { Loader2, MessageCircle, ThumbsUp, User, ChevronDown, ChevronUp, Send, R
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { getUserDisplayName, getUserAvatar } from '@/lib/utils/user-display';
-import { useUserProfile } from '@/hooks/use-user-profile';
 
 interface CommentsSectionProps {
   videoId: string;
@@ -53,7 +53,7 @@ export function CommentsSection({ videoId, className }: CommentsSectionProps) {
   } | null>(null);
 
   // Fetch comments from API
-  const fetchComments = async (pageToken?: string, append = false) => {
+  const fetchComments = useCallback(async (pageToken?: string, append = false) => {
     if (!videoId) return;
 
     setLoading(true);
@@ -93,7 +93,7 @@ export function CommentsSection({ videoId, className }: CommentsSectionProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [videoId]);
 
   // Load initial comments when videoId changes
   useEffect(() => {
@@ -104,7 +104,7 @@ export function CommentsSection({ videoId, className }: CommentsSectionProps) {
       setExpandedReplies(new Set());
       fetchComments();
     }
-  }, [videoId]);
+  }, [videoId, fetchComments]);
 
   // Load more comments
   const loadMoreComments = () => {
@@ -320,9 +320,11 @@ export function CommentsSection({ videoId, className }: CommentsSectionProps) {
     >
       <div className="flex-shrink-0">
         {comment.authorProfileImageUrl ? (
-          <img
+          <Image
             src={comment.authorProfileImageUrl}
             alt={comment.authorDisplayName}
+            width={32}
+            height={32}
             className="w-8 h-8 rounded-full"
           />
         ) : (
@@ -494,9 +496,11 @@ export function CommentsSection({ videoId, className }: CommentsSectionProps) {
           <div className="mb-6 space-y-3">
             <div className="flex items-center gap-3">
               {getUserAvatar(userProfile, session) ? (
-                <img
+                <Image
                   src={getUserAvatar(userProfile, session)!}
                   alt={getUserDisplayName(userProfile, session)}
+                  width={32}
+                  height={32}
                   className="w-8 h-8 rounded-full"
                 />
               ) : (

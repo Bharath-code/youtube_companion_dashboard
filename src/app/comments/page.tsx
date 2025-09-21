@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, MessageSquare, ThumbsUp, Reply, User } from 'lucide-react';
+import { Loader2, MessageSquare, ThumbsUp, Reply } from 'lucide-react';
 import { fetchVideoComments } from '@/lib/utils/youtube-helpers';
 import { Comment } from '@/lib/types';
 import { formatPublishedDate } from '@/lib/utils/youtube-helpers';
@@ -100,9 +101,11 @@ export default function CommentsPage() {
             {comments.map((comment) => (
               <div key={comment.id} className="border-b border-gray-100 pb-6 last:border-b-0">
                 <div className="flex space-x-3">
-                  <img
+                  <Image
                     src={comment.authorProfileImageUrl}
                     alt={comment.authorDisplayName}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full flex-shrink-0"
                   />
                   <div className="flex-1 space-y-2">
@@ -140,9 +143,11 @@ export default function CommentsPage() {
                       <div className="ml-6 mt-4 space-y-3 border-l-2 border-gray-100 pl-4">
                         {comment.replies.map((reply) => (
                           <div key={reply.id} className="flex space-x-3">
-                            <img
+                            <Image
                               src={reply.authorProfileImageUrl}
                               alt={reply.authorDisplayName}
+                              width={32}
+                              height={32}
                               className="w-8 h-8 rounded-full flex-shrink-0"
                             />
                             <div className="flex-1 space-y-1">

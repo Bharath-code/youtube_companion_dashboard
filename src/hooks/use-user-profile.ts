@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { User } from '@prisma/client';
 
@@ -15,7 +15,7 @@ export function useUserProfile(): UseUserProfileReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!session) {
       setProfile(null);
       setLoading(false);
@@ -42,11 +42,11 @@ export function useUserProfile(): UseUserProfileReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
 
   useEffect(() => {
     fetchProfile();
-  }, [session]);
+  }, [fetchProfile]);
 
   return {
     profile,
