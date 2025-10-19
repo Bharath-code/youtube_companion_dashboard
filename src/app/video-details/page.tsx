@@ -5,14 +5,13 @@ import { VideoDetailsCard } from '@/components/features/video-details-card';
 import { VideoEditor } from '@/components/features/video-editor';
 import { CommentsSection } from '@/components/features/comments-section';
 import { NotesPanel } from '@/components/features/notes-panel';
-import { YouTubeUpdateTest } from '@/components/debug/youtube-update-test';
+import { VideoList } from '@/components/features/video-list';
+
 import { VideoDetails, VideoUpdate } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
-import { Edit, MessageCircle, Info, Settings, StickyNote } from 'lucide-react';
+import { Edit, MessageCircle, Info, StickyNote } from 'lucide-react';
 
 export default function VideoDetailsPage() {
   const [videoUrl, setVideoUrl] = useState('');
@@ -185,36 +184,7 @@ export default function VideoDetailsPage() {
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Video Management</h1>
 
-        {/* Video URL Input */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Enter Your YouTube Video URL or ID</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex space-x-4">
-              <Input
-                type="text"
-                placeholder="https://www.youtube.com/watch?v=... or video ID"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleFetchVideo()}
-                className="flex-1"
-                disabled={!isAuthenticated}
-              />
-              <Button
-                onClick={handleFetchVideo}
-                disabled={loading || !isAuthenticated}
-              >
-                {loading ? 'Loading...' : 'Fetch Video'}
-              </Button>
-            </div>
-            {!isAuthenticated && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Please sign in to access your YouTube videos
-              </p>
-            )}
-          </CardContent>
-        </Card>
+
 
         {/* Main Content - Tabbed Interface */}
         {video && (
@@ -236,10 +206,7 @@ export default function VideoDetailsPage() {
                 <StickyNote className="w-4 h-4" />
                 Notes
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                Advanced
-              </TabsTrigger>
+
             </TabsList>
 
             <TabsContent value="details" className="mt-6">
@@ -280,78 +247,13 @@ export default function VideoDetailsPage() {
               <NotesPanel videoId={video.id} />
             </TabsContent>
 
-            <TabsContent value="settings" className="mt-6">
-              <div className="space-y-6">
-                {/* API Update Test */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>API Update Test</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <YouTubeUpdateTest />
-                  </CardContent>
-                </Card>
 
-                {/* Test States */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Test Different States</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setVideo(null);
-                          setLoading(false);
-                          setError(null);
-                          setIsEditing(false);
-                          setIsOwner(false);
-                          setIsUnlisted(false);
-                        }}
-                      >
-                        Test Empty State
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setVideo(null);
-                          setLoading(true);
-                          setError(null);
-                          setIsEditing(false);
-                        }}
-                      >
-                        Test Loading State
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setVideo(null);
-                          setLoading(false);
-                          setError('This is a test error message');
-                          setIsEditing(false);
-                        }}
-                      >
-                        Test Error State
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
           </Tabs>
         )}
 
-        {/* Show video details card when no video is loaded */}
+        {/* Show uploads list when no video is selected */}
         {!video && (
-          <VideoDetailsCard
-            video={video}
-            loading={loading}
-            error={error}
-            onEdit={handleEdit}
-            isOwner={isOwner}
-            isUnlisted={isUnlisted}
-          />
+          <VideoList />
         )}
       </div>
     </div>

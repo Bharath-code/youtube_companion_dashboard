@@ -12,7 +12,7 @@ import { StickyNote, Search, Tag, Video, Plus } from 'lucide-react';
 export default function NotesPage() {
   const { data: session } = useSession();
   const [filterVideoId, setFilterVideoId] = useState<string>('');
-  const [showVideoFilter, setShowVideoFilter] = useState(false);
+  const [showVideoFilter, setShowVideoFilter] = useState(true);
 
   if (!session) {
     return (
@@ -66,10 +66,10 @@ export default function NotesPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <StickyNote className="w-8 h-8" />
-            My Notes
+            Notes by Video
           </h1>
           <p className="text-muted-foreground mt-2">
-            Manage all your video notes in one place. Search, filter, and organize your thoughts.
+            Notes are attached to individual videos. Pick a video to jot ideas.
           </p>
         </div>
 
@@ -124,9 +124,8 @@ export default function NotesPage() {
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
-            <a href="/video-details">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Note to Video
+            <a href="/videos">
+              Browse My Videos
             </a>
           </Button>
           <Button asChild variant="outline" size="sm">
@@ -139,10 +138,21 @@ export default function NotesPage() {
       </div>
 
       {/* Notes Panel */}
-      <NotesPanel 
-        videoId={filterVideoId || undefined}
-        className="min-h-[600px]"
-      />
+      {filterVideoId ? (
+        <NotesPanel 
+          videoId={filterVideoId}
+          className="min-h-[600px]"
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Select a Video to View Notes</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            Enter a video URL/ID above or browse your videos to access notes for a specific video.
+          </CardContent>
+        </Card>
+      )}
 
       {/* Help Section */}
       <Card>

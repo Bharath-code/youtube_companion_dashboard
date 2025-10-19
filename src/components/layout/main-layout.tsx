@@ -13,7 +13,11 @@ export function MainLayout({ children }: MainLayoutProps) {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative isolate">
+      {/* Background gradient + noise overlay */}
+      <div className="pointer-events-none fixed inset-0 -z-10 [background-blend-mode:overlay] bg-[radial-gradient(ellipse_at_top_left,_rgba(99,102,241,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_right,_rgba(236,72,153,0.12),transparent_55%),radial-gradient(ellipse_at_center,_rgba(14,165,233,0.10),transparent_60%)]" />
+      <div className="noise-overlay" />
+
       {/* Header */}
       <Header />
       
@@ -33,7 +37,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
           
           {/* Page Content */}
-          <div className="p-6">
+          <div className="px-6 py-8 md:py-10">
             {children}
           </div>
         </main>

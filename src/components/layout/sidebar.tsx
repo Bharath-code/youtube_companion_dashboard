@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { 
   Home, 
   Video, 
-  MessageSquare, 
   StickyNote, 
   Activity,
   Menu,
@@ -33,18 +32,7 @@ const navigationItems = [
     icon: Video,
     description: 'Browse and select videos'
   },
-  {
-    title: 'Video Manager',
-    href: '/video-details',
-    icon: MessageSquare,
-    description: 'Edit metadata & comments'
-  },
-  {
-    title: 'Notes',
-    href: '/notes',
-    icon: StickyNote,
-    description: 'Personal notes and tags'
-  },
+
   {
     title: 'Events',
     href: '/events',
@@ -64,12 +52,12 @@ export function Sidebar({ className }: SidebarProps) {
 
   return (
     <div className={cn(
-      "flex flex-col border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+      "flex flex-col border-r border-white/20 dark:border-white/10 bg-background/50 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40",
       isCollapsed ? "w-16" : "w-64",
       className
     )}>
       {/* Sidebar Header */}
-      <div className="flex h-16 items-center justify-between px-4 border-b">
+      <div className="flex h-16 items-center justify-between px-4 border-b border-white/20 dark:border-white/10">
         {!isCollapsed && (
           <h2 className="text-lg font-semibold">Navigation</h2>
         )}
@@ -94,7 +82,7 @@ export function Sidebar({ className }: SidebarProps) {
               <Button
                 variant={isActive ? "secondary" : "ghost"}
                 className={cn(
-                  "w-full justify-start",
+                  "w-full justify-start rounded-md transition-all duration-200 hover:bg-secondary/60 hover:scale-[0.99] active:scale-[0.98]",
                   isCollapsed ? "px-2" : "px-3",
                   isActive && "bg-secondary"
                 )}
@@ -155,13 +143,13 @@ export function MobileSidebar() {
         <div className="fixed inset-0 z-50 md:hidden">
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-background/60 backdrop-blur-xl"
             onClick={() => setIsOpen(false)}
           />
           
           {/* Sidebar */}
-          <div className="fixed left-0 top-0 h-full w-64 bg-background border-r shadow-lg">
-            <div className="flex h-16 items-center justify-between px-4 border-b">
+          <div className="fixed left-0 top-0 h-full w-64 bg-background/70 backdrop-blur-xl border-r border-white/20 dark:border-white/10 shadow-2xl">
+            <div className="flex h-16 items-center justify-between px-4 border-b border-white/20 dark:border-white/10">
               <h2 className="text-lg font-semibold">Navigation</h2>
               <Button
                 variant="ghost"
@@ -187,7 +175,7 @@ export function MobileSidebar() {
                     <Button
                       variant={isActive ? "secondary" : "ghost"}
                       className={cn(
-                        "w-full justify-start px-3",
+                        "w-full justify-start px-3 rounded-md transition-all duration-200 hover:bg-secondary/60 hover:scale-[0.99] active:scale-[0.98]",
                         isActive && "bg-secondary"
                       )}
                     >

@@ -10,8 +10,8 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
 
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between px-4">
+    <header className="sticky top-0 z-40 border-b border-white/30 dark:border-white/10 backdrop-blur-xl bg-background/60 supports-[backdrop-filter]:bg-background/40">
+      <div className="container flex h-16 items-center justify-between px-4 animate-in fade-in slide-in-from-top-2 duration-500">
         {/* Logo and Title */}
         <Link href="/" className="flex items-center space-x-2">
           <Youtube className="h-6 w-6 text-red-600" />
