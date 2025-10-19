@@ -4,9 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { APIResponse } from '@/lib/types';
 import { z } from 'zod';
 
-interface EventMetadata {
-  [key: string]: string | number | boolean | null;
-}
+type EventMetadata = Record<string, unknown> | null;
 
 // Schema for analytics query parameters
 const analyticsQuerySchema = z.object({
@@ -192,13 +190,24 @@ export async function GET(request: NextRequest) {
       .slice(0, 10);
 
     // Get recent activity (last 10 events)
-    const recentActivity = events.slice(0, 10).map(event => ({
-      date: event.timestamp.toISOString(),
-      eventType: event.eventType,
-      entityType: event.entityType,
-      entityId: event.entityId,
-      metadata: event.metadata ? JSON.parse(event.metadata) : null,
-    }));
+    const recentActivity = events.slice(0, 10).map(event => {
+      const raw = (event as unknown as { metadata: unknown }).metadata;
+      let normalized: Record<string, unknown> | null = null;
+      if (raw === null || raw === undefined) {
+        normalized = null;
+      } else if (typeof raw === 'string') {
+        try { normalized = JSON.parse(raw) as Record<string, unknown>; } catch { normalized = null; }
+      } else {
+        normalized = raw as Record<string, unknown>;
+      }
+      return {
+        date: event.timestamp.toISOString(),
+        eventType: event.eventType,
+        entityType: event.entityType,
+        entityId: event.entityId,
+        metadata: normalized,
+      };
+    });
 
     const analytics: EventAnalytics = {
       summary: {

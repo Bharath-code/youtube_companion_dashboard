@@ -5,6 +5,9 @@ import { APIResponse } from '@/lib/types';
 import { eventLogger } from '@/lib/services/event-logger';
 import { notesRateLimiter } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
+import { getDatabaseConfig } from '@/lib/db-config';
+
+const isPostgres = () => getDatabaseConfig().provider === 'postgresql';
 
 // Validation schemas
 const createNoteSchema = z.object({
@@ -95,18 +98,45 @@ export async function GET(request: NextRequest) {
     }
 
     if (query) {
-      // For SQLite, we can't use mode: 'insensitive', so we'll use contains without it
-      // SQLite LIKE is case-insensitive by default
-      where.content = {
-        contains: query,
-      };
+      // Provider-aware text search
+      if (isPostgres()) {
+        where.content = {
+          contains: query,
+        };
+      } else {
+        // SQLite: search content and tags (tags stored as JSON string)
+        where.OR = [
+          {
+            content: {
+              contains: query,
+            },
+          },
+          {
+            tags: {
+              contains: query,
+            },
+          },
+        ];
+      }
     }
 
     if (tags && tags.length > 0) {
-      // Search for notes that contain any of the specified tags
-      where.tags = {
-        contains: tags.join('|'), // Simple tag matching for SQLite
-      };
+      // Provider-aware tag filtering
+      const tagConditions = tags.map(tag => (
+        isPostgres() 
+          ? { tags: { has: tag } }
+          : { tags: { contains: `"${tag}"` } }
+      ));
+
+      if ((where as Record<string, unknown>).OR) {
+        where.AND = [
+          { OR: (where as Record<string, unknown>).OR },
+          { OR: tagConditions },
+        ];
+        delete (where as Record<string, unknown>).OR;
+      } else {
+        where.OR = tagConditions;
+      }
     }
 
     // Calculate pagination
@@ -125,11 +155,16 @@ export async function GET(request: NextRequest) {
       prisma.note.count({ where }),
     ]);
 
-    // Parse tags from JSON strings
-    const notesWithParsedTags = notes.map((note) => ({
-      ...note,
-      tags: note.tags ? JSON.parse(note.tags as string) : [],
-    }));
+    // Normalize tags for response
+    const notesWithParsedTags = notes.map((note) => {
+      const raw = (note as unknown as { tags: unknown }).tags;
+      const normalized = raw === null || raw === undefined
+        ? []
+        : Array.isArray(raw)
+          ? (raw as string[])
+          : (() => { try { return JSON.parse(raw as string) as string[] } catch { return [] as string[] } })();
+      return { ...note, tags: normalized };
+    });
 
     const totalPages = Math.ceil(totalCount / limit);
 
@@ -248,15 +283,23 @@ export async function POST(request: NextRequest) {
       data: {
         videoId: validatedData.videoId,
         content: validatedData.content,
-        tags: JSON.stringify(validatedData.tags), // Store as JSON string for SQLite
+        // Cast through unknown to satisfy Prisma types in dev (string) and prod (string[])
+        tags: (isPostgres() ? (validatedData.tags ?? []) : JSON.stringify(validatedData.tags ?? [])) as unknown as string,
         userId: user.id,
       },
     });
 
-    // Parse tags back to array for response
+    // Normalize tags for response
+    const raw = (note as unknown as { tags: unknown }).tags;
+    const normalized = raw === null || raw === undefined
+      ? []
+      : Array.isArray(raw)
+        ? (raw as string[])
+        : (() => { try { return JSON.parse(raw as string) as string[] } catch { return [] as string[] } })();
+
     const noteWithParsedTags = {
       ...note,
-      tags: note.tags ? JSON.parse(note.tags) : [],
+      tags: normalized,
     };
 
     // Log note creation event

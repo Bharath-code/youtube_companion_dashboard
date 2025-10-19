@@ -3,6 +3,9 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { APIResponse } from '@/lib/types';
 import { z } from 'zod';
+import { getDatabaseConfig } from '@/lib/db-config';
+
+const isPostgres = () => getDatabaseConfig().provider === 'postgresql';
 
 // Search suggestions schema
 const suggestionsSchema = z.object({
@@ -111,19 +114,19 @@ export async function GET(request: NextRequest) {
       const tagFrequency = new Map<string, number>();
       
       notes.forEach(note => {
-        if (note.tags) {
-          try {
-            const tags = JSON.parse(note.tags) as string[];
-            tags.forEach(tag => {
-              const tagLower = tag.toLowerCase();
-              if (tagLower.includes(queryLower) && tagLower !== queryLower) {
-                tagFrequency.set(tag, (tagFrequency.get(tag) || 0) + 1);
-              }
-            });
-          } catch (error) {
-            console.error('Error parsing tags:', error);
+        const raw = (note as unknown as { tags: unknown }).tags;
+        const tags = raw === null || raw === undefined
+          ? []
+          : Array.isArray(raw)
+            ? (raw as string[])
+            : (() => { try { return JSON.parse(raw as string) as string[] } catch { return [] as string[] } })();
+
+        tags.forEach(tag => {
+          const tagLower = tag.toLowerCase();
+          if (tagLower.includes(queryLower) && tagLower !== queryLower) {
+            tagFrequency.set(tag, (tagFrequency.get(tag) || 0) + 1);
           }
-        }
+        });
       });
 
       // Convert to suggestions

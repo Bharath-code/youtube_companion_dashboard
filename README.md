@@ -101,106 +101,170 @@ src/
 ## API Endpoints
 
 ### Authentication
-- `GET /api/auth/session` - Get current user session
-- `POST /api/auth/signin` - Sign in with Google OAuth
-- `POST /api/auth/signout` - Sign out current user
+- `GET /api/auth/session` - Get current user session (NextAuth)
+- `POST /api/auth/signin` - Sign in with Google OAuth (NextAuth)
+- `POST /api/auth/signout` - Sign out current user (NextAuth)
 
-### Notes Management
-- `GET /api/notes` - Get all notes for authenticated user
-- `POST /api/notes` - Create a new note
-- `GET /api/notes/[noteId]` - Get specific note by ID
-- `PUT /api/notes/[noteId]` - Update specific note
-- `DELETE /api/notes/[noteId]` - Delete specific note
-- `GET /api/notes/search` - Search notes with query parameters
-- `GET /api/notes/suggestions` - Get note suggestions based on content
-- `GET /api/notes/tags` - Get all available tags
+### Health
+- `GET /api/health` - Health check with auth and environment status
 
-### YouTube Integration
-- `GET /api/youtube/videos/[videoId]` - Get YouTube video details
-- `GET /api/youtube/videos/[videoId]/comments` - Get video comments
-- `POST /api/youtube/videos/[videoId]/comments` - Add comment to video
-- `DELETE /api/youtube/comments/[commentId]` - Delete comment
-- `GET /api/youtube/channels/[channelId]` - Get channel information
+### User
+- `GET /api/user` - Get authenticated user summary and access token status
+- `GET /api/user/profile` - Get user profile
+- `PUT /api/user/profile` - Update display name or username
 
-### Event Logging & Analytics
-- `GET /api/events` - Get event logs (paginated, filtered)
-- `GET /api/events/analytics` - Get event analytics and statistics
-- `POST /api/events/track` - Track client-side events
+### Notes
+- `GET /api/notes` - List notes with search and pagination
+  - Query: `query`, `tags` (comma-separated), `videoId`, `page`, `limit` (≤100), `orderBy` (`createdAt`|`updatedAt`|`content`), `orderDirection` (`asc`|`desc`)
+- `POST /api/notes` - Create note
+  - Body: `videoId` (string), `content` (string), `tags` (string[] optional)
+- `GET /api/notes/[noteId]` - Get note by ID
+- `PUT /api/notes/[noteId]` - Update content, tags, or videoId
+- `DELETE /api/notes/[noteId]` - Delete note
+- `GET /api/notes/search` - Enhanced search with relevance and highlights
+  - Query: `query`, `tags`, `videoId`, `page`, `limit` (≤100), `orderBy` (`createdAt`|`updatedAt`|`content`|`relevance`), `orderDirection`, `includeHighlights` (boolean)
+- `GET /api/notes/suggestions` - Search suggestions
+  - Query: `query` (required), `limit` (≤20), `type` (`content`|`tags`|`both`)
+- `GET /api/notes/tags` - All unique tags for user
 
-### User Management
-- `GET /api/user/profile` - Get user profile information
-- `PUT /api/user/profile` - Update user profile
+### YouTube
+- `GET /api/youtube/video?id=...` - Public video details by ID (no auth)
+- `GET /api/youtube/video/[videoId]` - Authenticated video details with ownership validation
+- `PUT /api/youtube/video/[videoId]/update` - Update video title/description (auth)
+- `GET /api/youtube/videos` - Authenticated user's videos (`maxResults` 1–50, `pageToken`)
+- `GET /api/youtube/channel` - Authenticated user's channel info
+- `GET /api/youtube/comments?id=...` - Public comments for a video (`maxResults`, `pageToken`)
+- `POST /api/youtube/comments` - Post comment or reply (auth)
+- `DELETE /api/youtube/comments/[commentId]` - Delete comment (auth)
+
+### Events
+- `GET /api/events` - Event logs with filters and pagination
+  - Query: `page`, `limit`, `eventType`, `entityType`, `entityId`, `startDate`, `endDate`, `orderBy`, `orderDirection`
+- `GET /api/events/analytics` - Summary, timeline, top events, recent activity
+  - Query: `period` (`day`|`week`|`month`|`year`), `startDate`, `endDate`, `groupBy`
+- `GET /api/events/stats` - Aggregated counts per `eventType`
+- `POST /api/events/track` - Track an event (auth)
+  - Body: `eventType`, `entityType`, `entityId`, optional `metadata`
 
 ## Database Schema
 
 ### Core Models
 
-#### User
-```sql
-User {
+Dev (SQLite)
+```prisma
+model User {
   id          String   @id @default(cuid())
   name        String?
+  displayName String?
+  username    String?
   email       String   @unique
   image       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  // Relations
+
   accounts    Account[]
   sessions    Session[]
   notes       Note[]
   eventLogs   EventLog[]
-}
-```
 
-#### Note
-```sql
-Note {
-  id          String   @id @default(cuid())
-  title       String
-  content     String
-  tags        String[] @default([])
-  videoId     String?
-  timestamp   Float?
-  isPublic    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String
-  
-  // Relations
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Indexes
-  @@index([userId])
+  @@map("users")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  videoId   String
+  content   String
+  tags      String   // JSON string for SQLite
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([videoId])
-  @@index([createdAt])
+  @@index([userId])
+  @@index([content])
+  @@index([tags])
+  @@index([userId, videoId])
+  @@index([userId, createdAt])
+  @@map("notes")
 }
-```
 
-#### EventLog
-```sql
-EventLog {
-  id          String   @id @default(cuid())
-  eventType   String   // Enum: video_viewed, note_created, search_performed, etc.
-  entityType  String   // Enum: user, video, note, comment, page, button, etc.
-  entityId    String
-  metadata    Json     @default("{}")
-  timestamp   DateTime @default(now())
-  ipAddress   String?
-  userAgent   String?
-  userId      String
-  
-  // Relations
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Indexes
+model EventLog {
+  id         String   @id @default(cuid())
+  eventType  String
+  entityType String
+  entityId   String
+  metadata   String?  // JSON string for SQLite
+  timestamp  DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([eventType])
-  @@index([entityType])
   @@index([timestamp])
-  @@index([userId, timestamp])
+  @@map("event_logs")
 }
 ```
+
+Prod (PostgreSQL)
+```prisma
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  image        String?
+  googleId     String   @unique
+  accessToken  String?
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  notes        Note[]
+  eventLogs    EventLog[]
+
+  @@map("users")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  videoId   String
+  content   String
+  tags      String[] // PostgreSQL array
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@index([userId])
+  @@map("notes")
+}
+
+model EventLog {
+  id         String   @id @default(cuid())
+  eventType  String
+  entityType String
+  entityId   String
+  metadata   Json?    // PostgreSQL JSON
+  timestamp  DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([timestamp])
+  @@map("event_logs")
+}
+```
+
+### Provider-specific Differences
+- SQLite (development): `tags` stored as JSON strings; `metadata` stored as `String?`.
+- PostgreSQL (production): `tags` as `String[]`; `metadata` as `Json?`.
+- API endpoints normalize tags and metadata across providers for consistent responses.
 
 ### Event Types
 

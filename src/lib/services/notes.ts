@@ -5,6 +5,10 @@ import {
   SearchOptions, 
   Note
 } from '@/lib/types';
+import { getDatabaseConfig } from '@/lib/db-config';
+import { Prisma } from '@prisma/client';
+
+const isPostgres = () => getDatabaseConfig().provider === 'postgresql';
 
 export class NotesService {
   private static instance: NotesService;
@@ -29,18 +33,24 @@ export class NotesService {
         throw new Error('Note content cannot be empty');
       }
 
+      const data: Record<string, unknown> = {
+        videoId: input.videoId,
+        content: sanitizedContent,
+        userId: input.userId,
+      };
+
+      data['tags'] = isPostgres() ? sanitizedTags : JSON.stringify(sanitizedTags);
+
       const note = await prisma.note.create({
-        data: {
-          videoId: input.videoId,
-          content: sanitizedContent,
-          tags: JSON.stringify(sanitizedTags),
-          userId: input.userId,
-        },
+        data: data as unknown as Prisma.NoteCreateInput,
       });
+
+      const rawTags = (note as unknown as { tags: unknown }).tags;
+      const normalizedTags = Array.isArray(rawTags) ? (rawTags as string[]) : JSON.parse(rawTags as string);
 
       return {
         ...note,
-        tags: note.tags ? JSON.parse(note.tags) : [],
+        tags: normalizedTags,
       };
     } catch (error) {
       console.error('Error creating note:', error);
@@ -64,9 +74,12 @@ export class NotesService {
         return null;
       }
 
+      const rawTags = (note as unknown as { tags: unknown }).tags;
+      const normalizedTags = Array.isArray(rawTags) ? (rawTags as string[]) : JSON.parse(rawTags as string);
+
       return {
         ...note,
-        tags: note.tags ? JSON.parse(note.tags) : [],
+        tags: normalizedTags,
       };
     } catch (error) {
       console.error('Error fetching note:', error);
@@ -108,17 +121,20 @@ export class NotesService {
       
       if (input.tags !== undefined) {
         const sanitizedTags = input.tags.map(tag => tag.trim()).filter(Boolean);
-        updateData.tags = JSON.stringify(sanitizedTags);
+        updateData.tags = isPostgres() ? sanitizedTags : JSON.stringify(sanitizedTags);
       }
 
       const updatedNote = await prisma.note.update({
         where: { id: noteId },
-        data: updateData,
+        data: updateData as unknown as Prisma.NoteUpdateInput,
       });
+
+      const rawTags = (updatedNote as unknown as { tags: unknown }).tags;
+      const normalizedTags = Array.isArray(rawTags) ? (rawTags as string[]) : JSON.parse(rawTags as string);
 
       return {
         ...updatedNote,
-        tags: updatedNote.tags ? JSON.parse(updatedNote.tags) : [],
+        tags: normalizedTags,
       };
     } catch (error) {
       console.error('Error updating note:', error);
@@ -171,7 +187,7 @@ export class NotesService {
 
       // Build enhanced where clause
       const where: Record<string, unknown> = {
-        userId: userId,
+        userId,
       };
 
       if (videoId) {
@@ -182,38 +198,57 @@ export class NotesService {
       if (query && query.trim()) {
         const searchTerm = query.trim();
         
-        // Search in both content and tags
-        where.OR = [
-          {
-            content: {
-              contains: searchTerm,
+        // Search in content and tags depending on provider
+        if (isPostgres()) {
+          // Postgres arrays do not support text contains on arrays; search content only
+          where.content = { contains: searchTerm };
+        } else {
+          // SQLite JSON string storage: search in both content and tags
+          where.OR = [
+            {
+              content: {
+                contains: searchTerm,
+              },
             },
-          },
-          {
-            tags: {
-              contains: searchTerm,
+            {
+              tags: {
+                contains: searchTerm,
+              },
             },
-          },
-        ];
+          ];
+        }
       }
 
       // Enhanced tag filtering with exact matches
       if (tags && tags.length > 0) {
-        const tagConditions = tags.map(tag => ({
-          tags: {
-            contains: `"${tag}"`, // Exact tag match in JSON
-          },
-        }));
-
-        if (where.OR) {
-          // Combine with existing OR conditions
-          where.AND = [
-            { OR: where.OR },
-            { OR: tagConditions },
-          ];
-          delete where.OR;
+        if (isPostgres()) {
+          const tagConditions = tags.map(tag => ({ tags: { has: tag } }));
+          if (where.OR) {
+            where.AND = [
+              { OR: where.OR },
+              { OR: tagConditions },
+            ];
+            delete where.OR;
+          } else {
+            where.OR = tagConditions;
+          }
         } else {
-          where.OR = tagConditions;
+          const tagConditions = tags.map(tag => ({
+            tags: {
+              contains: `"${tag}"`, // Exact tag match in JSON
+            },
+          }));
+
+          if (where.OR) {
+            // Combine with existing OR conditions
+            where.AND = [
+              { OR: where.OR },
+              { OR: tagConditions },
+            ];
+            delete where.OR;
+          } else {
+            where.OR = tagConditions;
+          }
         }
       }
 
@@ -232,19 +267,23 @@ export class NotesService {
       // Fetch notes and count
       const [notes, totalCount] = await Promise.all([
         prisma.note.findMany({
-          where,
-          orderBy: orderByClause,
+          where: where as unknown as Prisma.NoteWhereInput,
+          orderBy: orderByClause as Prisma.NoteOrderByWithRelationInput,
           skip,
           take: limit,
         }),
-        prisma.note.count({ where }),
+        prisma.note.count({ where: where as unknown as Prisma.NoteWhereInput }),
       ]);
 
-      // Parse tags from JSON strings
-      const notesWithParsedTags = notes.map((note) => ({
-        ...note,
-        tags: note.tags ? JSON.parse(note.tags as string) : [],
-      }));
+      // Normalize tags
+      const notesWithParsedTags = notes.map((note) => {
+        const rawTags = (note as unknown as { tags: unknown }).tags;
+        const normalizedTags = Array.isArray(rawTags) ? (rawTags as string[]) : JSON.parse(rawTags as string);
+        return {
+          ...note,
+          tags: normalizedTags,
+        };
+      });
 
       const totalPages = Math.ceil(totalCount / limit);
 
@@ -337,19 +376,16 @@ export class NotesService {
       const tagFrequency = new Map<string, number>();
       
       notes.forEach(note => {
-        if (note.tags) {
-          try {
-            const tags = JSON.parse(note.tags) as string[];
-            tags.forEach(tag => {
-              const tagLower = tag.toLowerCase();
-              if (tagLower.includes(queryLower) && tagLower !== queryLower) {
-                tagFrequency.set(tag, (tagFrequency.get(tag) || 0) + 1);
-              }
-            });
-          } catch (error) {
-            console.error('Error parsing tags:', error);
+        const rawTags = (note as unknown as { tags: unknown }).tags;
+        const parsedTags = Array.isArray(rawTags) ? (rawTags as string[]) : (() => {
+          try { return JSON.parse(rawTags as string) as string[] } catch { return [] as string[] }
+        })();
+        parsedTags.forEach(tag => {
+          const tagLower = tag.toLowerCase();
+          if (tagLower.includes(queryLower) && tagLower !== queryLower) {
+            tagFrequency.set(tag, (tagFrequency.get(tag) || 0) + 1);
           }
-        }
+        });
       });
 
       // Convert tags to suggestions
@@ -387,10 +423,14 @@ export class NotesService {
         },
       });
 
-      return notes.map((note) => ({
-        ...note,
-        tags: note.tags ? JSON.parse(note.tags as string) : [],
-      }));
+      return notes.map((note) => {
+        const rawTags = (note as unknown as { tags: unknown }).tags;
+        const normalizedTags = Array.isArray(rawTags) ? (rawTags as string[]) : JSON.parse(rawTags as string);
+        return {
+          ...note,
+          tags: normalizedTags,
+        };
+      });
     } catch (error) {
       console.error('Error fetching notes for video:', error);
       throw new Error('Failed to fetch notes for video');
@@ -410,14 +450,11 @@ export class NotesService {
       const allTags = new Set<string>();
       
       notes.forEach((note) => {
-        if (note.tags) {
-          try {
-            const tags = JSON.parse(note.tags) as string[];
-            tags.forEach(tag => allTags.add(tag));
-          } catch (error) {
-            console.error('Error parsing tags:', error);
-          }
-        }
+        const rawTags = (note as unknown as { tags: unknown }).tags;
+        const parsedTags = Array.isArray(rawTags) ? (rawTags as string[]) : (() => {
+          try { return JSON.parse(rawTags as string) as string[] } catch { return [] as string[] }
+        })();
+        parsedTags.forEach(tag => allTags.add(tag));
       });
 
       return Array.from(allTags).sort();

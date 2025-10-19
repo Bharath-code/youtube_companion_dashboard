@@ -1,5 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { EventType, EntityType, CreateEventLogInput } from '@/lib/types';
+import { getDatabaseConfig } from '@/lib/db-config';
+import { Prisma } from '@prisma/client';
+
+const isPostgres = () => getDatabaseConfig().provider === 'postgresql';
 
 export class EventLogger {
   private static instance: EventLogger;
@@ -17,50 +21,41 @@ export class EventLogger {
   async logEvent(input: CreateEventLogInput): Promise<void> {
     try {
       const { metadata, ...rest } = input;
-      
-      interface EventLogData {
-        eventType: string;
-        entityType: string;
-        entityId: string;
-        metadata: string | null;
-        ipAddress?: string;
-        userAgent?: string;
-        userId: string;
-      }
-      
-      const data: EventLogData = {
+
+      const data: Record<string, unknown> = {
         ...rest,
-        metadata: metadata ? JSON.stringify(metadata) : null,
       };
 
-      await prisma.eventLog.create({ data });
+      // Provider-aware metadata handling
+      if (metadata !== undefined && metadata !== null) {
+        data['metadata'] = isPostgres() ? metadata : JSON.stringify(metadata);
+      } else {
+        data['metadata'] = null;
+      }
+
+      await prisma.eventLog.create({ data: data as unknown as Prisma.EventLogCreateInput });
     } catch (error) {
       // Log the logging failure but don't throw - requirement 7.6
       console.error('Failed to log event:', error);
       
       // Attempt to log the logging failure
       try {
-        interface FailureEventLogData {
-          eventType: string;
-          entityType: string;
-          entityId: string;
-          metadata: string;
-          userId: string;
-        }
-        
-        const failureData: FailureEventLogData = {
+        const failureMetadata = {
+          originalEvent: input,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+
+        const failureData: Record<string, unknown> = {
           eventType: EventType.API_ERROR,
           entityType: EntityType.USER,
           entityId: input.userId || 'system',
-          metadata: JSON.stringify({
-            originalEvent: input,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          }),
           userId: input.userId || 'system',
         };
 
+        failureData['metadata'] = isPostgres() ? failureMetadata : JSON.stringify(failureMetadata);
+
         await prisma.eventLog.create({
-          data: failureData,
+          data: failureData as unknown as Prisma.EventLogCreateInput,
         });
       } catch (loggingError) {
         console.error('Failed to log the logging failure:', loggingError);
@@ -245,7 +240,7 @@ export class EventLogger {
       played: EventType.VIDEO_PLAYED,
       paused: EventType.VIDEO_PAUSED,
       seeked: EventType.VIDEO_SEEKED,
-    };
+    } as const;
 
     await this.logEvent({
       eventType: eventTypeMap[action],
@@ -258,24 +253,14 @@ export class EventLogger {
     });
   }
 
-  /**
-   * Get client IP address from request headers
-   */
+  /** Utility: extract IP address from request */
   getClientIP(request: Request): string | undefined {
     const forwarded = request.headers.get('x-forwarded-for');
-    const realIP = request.headers.get('x-real-ip');
-    const clientIP = request.headers.get('x-client-ip');
-    
-    if (forwarded) {
-      return forwarded.split(',')[0].trim();
-    }
-    
-    return realIP || clientIP || undefined;
+    if (forwarded) return forwarded.split(',')[0];
+    return request.headers.get('x-real-ip') || undefined;
   }
 
-  /**
-   * Get user agent from request headers
-   */
+  /** Utility: extract user agent from request */
   getUserAgent(request: Request): string | undefined {
     return request.headers.get('user-agent') || undefined;
   }

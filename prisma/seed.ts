@@ -1,6 +1,8 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
+import { getDatabaseConfig } from '../src/lib/db-config'
 
 const prisma = new PrismaClient()
+const isPostgres = () => getDatabaseConfig().provider === 'postgresql'
 
 async function main() {
   console.log('🌱 Seeding database...')
@@ -18,27 +20,33 @@ async function main() {
 
   console.log('✅ Created test user:', testUser.email)
 
-  // Create sample notes
+  // Create sample notes (provider-aware tags)
+  const sampleNoteData: Record<string, unknown> = {
+    videoId: 'sample-video-id',
+    content: 'This is a sample note for testing purposes.',
+    userId: testUser.id,
+  }
+  sampleNoteData['tags'] = isPostgres() ? ['sample', 'test'] : JSON.stringify(['sample', 'test'])
+
   const sampleNote = await prisma.note.create({
-    data: {
-      videoId: 'sample-video-id',
-      content: 'This is a sample note for testing purposes.',
-      tags: JSON.stringify(['sample', 'test']),
-      userId: testUser.id,
-    },
+    data: sampleNoteData as unknown as Prisma.NoteCreateInput,
   })
 
   console.log('✅ Created sample note:', sampleNote.id)
 
-  // Create sample event log
+  // Create sample event log (provider-aware metadata)
+  const sampleEventData: Record<string, unknown> = {
+    eventType: 'video_viewed',
+    entityType: 'video',
+    entityId: 'sample-video-id',
+    userId: testUser.id,
+  }
+  sampleEventData['metadata'] = isPostgres() 
+    ? { action: 'initial_view' } 
+    : JSON.stringify({ action: 'initial_view' })
+
   const sampleEvent = await prisma.eventLog.create({
-    data: {
-      eventType: 'video_viewed',
-      entityType: 'video',
-      entityId: 'sample-video-id',
-      metadata: JSON.stringify({ action: 'initial_view' }),
-      userId: testUser.id,
-    },
+    data: sampleEventData as unknown as Prisma.EventLogCreateInput,
   })
 
   console.log('✅ Created sample event log:', sampleEvent.id)

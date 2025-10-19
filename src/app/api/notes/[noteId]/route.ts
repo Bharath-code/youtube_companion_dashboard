@@ -4,6 +4,9 @@ import { prisma } from '@/lib/prisma';
 import { APIResponse } from '@/lib/types';
 import { eventLogger } from '@/lib/services/event-logger';
 import { z } from 'zod';
+import { getDatabaseConfig } from '@/lib/db-config';
+
+const isPostgres = () => getDatabaseConfig().provider === 'postgresql';
 
 // Validation schema for updating notes
 const updateNoteSchema = z.object({
@@ -70,10 +73,17 @@ export async function GET(
       }, { status: 404 });
     }
 
-    // Parse tags from JSON string
+    // Normalize tags provider-aware
+    const raw = (note as unknown as { tags: unknown }).tags;
+    const normalizedTags = raw === null || raw === undefined
+      ? []
+      : Array.isArray(raw)
+        ? (raw as string[])
+        : (() => { try { return JSON.parse(raw as string) as string[] } catch { return [] as string[] } })();
+
     const noteWithParsedTags = {
       ...note,
-      tags: note.tags ? JSON.parse(note.tags) : [],
+      tags: normalizedTags,
     };
 
     return NextResponse.json<APIResponse<typeof noteWithParsedTags>>({
@@ -165,7 +175,8 @@ export async function PUT(
     }
     
     if (validatedData.tags !== undefined) {
-      updateData.tags = JSON.stringify(validatedData.tags);
+      // Provider-aware tags update; cast to satisfy dev Prisma types
+      updateData.tags = (isPostgres() ? validatedData.tags : JSON.stringify(validatedData.tags)) as unknown as string;
     }
 
     // Update the note
@@ -174,10 +185,17 @@ export async function PUT(
       data: updateData,
     });
 
-    // Parse tags back to array for response
+    // Normalize tags back to array for response
+    const rawUpdated = (updatedNote as unknown as { tags: unknown }).tags;
+    const normalizedTags = rawUpdated === null || rawUpdated === undefined
+      ? []
+      : Array.isArray(rawUpdated)
+        ? (rawUpdated as string[])
+        : (() => { try { return JSON.parse(rawUpdated as string) as string[] } catch { return [] as string[] } })();
+
     const noteWithParsedTags = {
       ...updatedNote,
-      tags: updatedNote.tags ? JSON.parse(updatedNote.tags) : [],
+      tags: normalizedTags,
     };
 
     // Log note update event

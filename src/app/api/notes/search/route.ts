@@ -5,6 +5,9 @@ import { APIResponse } from '@/lib/types';
 import { eventLogger } from '@/lib/services/event-logger';
 import { notesRateLimiter } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
+import { getDatabaseConfig } from '@/lib/db-config';
+
+const isPostgres = () => getDatabaseConfig().provider === 'postgresql';
 
 // Enhanced search schema with more options
 const searchSchema = z.object({
@@ -93,38 +96,32 @@ export async function GET(request: NextRequest) {
     if (query && query.trim()) {
       const searchTerm = query.trim();
       
-      // For SQLite, LIKE is case-insensitive by default
-      // In production with PostgreSQL, this could use full-text search
-      where.OR = [
-        {
-          content: {
-            contains: searchTerm,
-          },
-        },
-        // Also search in tags (JSON string contains)
-        {
-          tags: {
-            contains: searchTerm,
-          },
-        },
-      ];
+      if (isPostgres()) {
+        where.content = { contains: searchTerm };
+      } else {
+        // SQLite: search in content and tags (tags stored as JSON string)
+        where.OR = [
+          { content: { contains: searchTerm } },
+          { tags: { contains: searchTerm } },
+        ];
+      }
     }
 
     // Enhanced tag filtering with exact and partial matches
     if (tags && tags.length > 0) {
-      const tagConditions = tags.map(tag => ({
-        tags: {
-          contains: `"${tag}"`, // Exact tag match in JSON
-        },
-      }));
+      const tagConditions = tags.map(tag => (
+        isPostgres()
+          ? { tags: { has: tag } }
+          : { tags: { contains: `"${tag}"` } }
+      ));
 
-      if (where.OR) {
+      if ((where as Record<string, unknown>).OR) {
         // Combine with existing OR conditions
         where.AND = [
-          { OR: where.OR },
+          { OR: (where as Record<string, unknown>).OR },
           { OR: tagConditions },
         ];
-        delete where.OR;
+        delete (where as Record<string, unknown>).OR;
       } else {
         where.OR = tagConditions;
       }
@@ -156,19 +153,24 @@ export async function GET(request: NextRequest) {
       prisma.note.count({ where }),
     ]);
 
-    // Parse tags and add highlights if requested
+    // Normalize tags and add highlights if requested
     const processedNotes = notes.map((note) => {
+      const raw = (note as unknown as { tags: unknown }).tags;
+      const normalizedTags = raw === null || raw === undefined
+        ? []
+        : Array.isArray(raw)
+          ? (raw as string[])
+          : (() => { try { return JSON.parse(raw as string) as string[] } catch { return [] as string[] } })();
+
       const parsedNote = {
         ...note,
-        tags: note.tags ? JSON.parse(note.tags as string) : [],
+        tags: normalizedTags,
       };
 
       // Add search highlights if requested and query exists
       if (includeHighlights && query && query.trim()) {
         const searchTerm = query.trim();
         const regex = new RegExp(`(${searchTerm})`, 'gi');
-        
-        // Add highlighted content (simple implementation)
         (parsedNote as Record<string, unknown>).highlightedContent = parsedNote.content.replace(
           regex,
           '<mark>$1</mark>'

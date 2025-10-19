@@ -7,6 +7,10 @@ import {
   SearchOptions,
   PaginationOptions
 } from './types/database'
+import { getDatabaseConfig } from './db-config'
+import { Prisma } from '@prisma/client'
+
+const isPostgres = () => getDatabaseConfig().provider === 'postgresql'
 
 /**
  * User operations
@@ -19,8 +23,6 @@ export const userOperations = {
   async findByEmail(email: string) {
     return prisma.user.findUnique({ where: { email } })
   },
-
-
 
   async update(id: string, data: UpdateUserInput) {
     return prisma.user.update({ where: { id }, data })
@@ -36,19 +38,21 @@ export const userOperations = {
  */
 export const noteOperations = {
   async create(data: CreateNoteInput) {
-    const noteData = {
+    const noteData: Record<string, unknown> = {
       ...data,
-      tags: JSON.stringify(data.tags) // Convert array to JSON string for SQLite
     }
-    return prisma.note.create({ data: noteData })
+    noteData['tags'] = isPostgres() ? data.tags : JSON.stringify(data.tags)
+    return prisma.note.create({ data: noteData as unknown as Prisma.NoteCreateInput })
   },
 
   async findById(id: string) {
     const note = await prisma.note.findUnique({ where: { id } })
     if (note) {
+      const rawTags = (note as unknown as { tags: unknown }).tags
+      const normalizedTags = Array.isArray(rawTags) ? (rawTags as string[]) : JSON.parse(rawTags as string)
       return {
         ...note,
-        tags: JSON.parse(note.tags) // Convert JSON string back to array
+        tags: normalizedTags
       }
     }
     return null
@@ -65,10 +69,14 @@ export const noteOperations = {
       include: { user: true }
     })
 
-    return notes.map(note => ({
-      ...note,
-      tags: JSON.parse(note.tags)
-    }))
+    return notes.map(note => {
+      const rawTags = (note as unknown as { tags: unknown }).tags
+      const normalizedTags = Array.isArray(rawTags) ? (rawTags as string[]) : JSON.parse(rawTags as string)
+      return {
+        ...note,
+        tags: normalizedTags
+      }
+    })
   },
 
   async search(options: SearchOptions) {
@@ -79,45 +87,58 @@ export const noteOperations = {
     if (videoId) where.videoId = videoId
     if (userId) where.userId = userId
     if (query) {
-      where.content = { contains: query, mode: 'insensitive' }
+      where.content = { contains: query }
+    }
+
+    // If Postgres and tags provided, push array has filters to where clause to reduce data scanned
+    if (isPostgres() && tags && tags.length > 0) {
+      where.OR = tags.map(t => ({ tags: { has: t } }))
     }
     
     const notes = await prisma.note.findMany({
-      where,
+      where: where as unknown as Prisma.NoteWhereInput,
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: 'desc' },
       include: { user: true }
     })
 
-    // Filter by tags if provided (since we store tags as JSON string)
-    let filteredNotes = notes.map(note => ({
-      ...note,
-      tags: JSON.parse(note.tags)
-    }))
+    // Normalize tags for both providers
+    let normalizedNotes = notes.map(note => {
+      const rawTags = (note as unknown as { tags: unknown }).tags
+      const normalizedTags = Array.isArray(rawTags) ? (rawTags as string[]) : JSON.parse(rawTags as string)
+      return {
+        ...note,
+        tags: normalizedTags
+      }
+    })
 
-    if (tags && tags.length > 0) {
-      filteredNotes = filteredNotes.filter(note =>
-        tags.some(tag => note.tags.includes(tag))
+    // For SQLite, filter by tags after normalization
+    if (!isPostgres() && tags && tags.length > 0) {
+      normalizedNotes = normalizedNotes.filter(note =>
+        tags.some(tag => (note as unknown as { tags: string[] }).tags.includes(tag))
       )
     }
 
-    return filteredNotes
+    return normalizedNotes
   },
 
   async update(id: string, data: Partial<Omit<CreateNoteInput, 'userId'>>) {
-    const updateData = data.tags 
-      ? { ...data, tags: JSON.stringify(data.tags) }
-      : data
+    const updateData: Record<string, unknown> = { ...data }
+    if (data.tags) {
+      updateData['tags'] = isPostgres() ? data.tags : JSON.stringify(data.tags)
+    }
     
     const note = await prisma.note.update({ 
       where: { id }, 
-      data: updateData as Record<string, unknown>
+      data: updateData as unknown as Prisma.NoteUpdateInput
     })
     
+    const rawTags = (note as unknown as { tags: unknown }).tags
+    const normalizedTags = Array.isArray(rawTags) ? (rawTags as string[]) : JSON.parse(rawTags as string)
     return {
       ...note,
-      tags: JSON.parse(note.tags)
+      tags: normalizedTags
     }
   },
 
@@ -131,11 +152,11 @@ export const noteOperations = {
  */
 export const eventLogOperations = {
   async create(data: CreateEventLogInput) {
-    const logData = {
+    const logData: Record<string, unknown> = {
       ...data,
-      metadata: data.metadata ? JSON.stringify(data.metadata) : null
     }
-    return prisma.eventLog.create({ data: logData })
+    logData['metadata'] = isPostgres() ? (data.metadata ?? null) : (data.metadata ? JSON.stringify(data.metadata) : null)
+    return prisma.eventLog.create({ data: logData as unknown as Prisma.EventLogCreateInput })
   },
 
   async findByUserId(userId: string, options: PaginationOptions = {}) {
@@ -148,10 +169,14 @@ export const eventLogOperations = {
       take: limit
     })
 
-    return logs.map(log => ({
-      ...log,
-      metadata: log.metadata ? JSON.parse(log.metadata) : null
-    }))
+    return logs.map(log => {
+      const rawMeta = (log as unknown as { metadata: unknown }).metadata
+      const normalizedMeta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta
+      return {
+        ...log,
+        metadata: normalizedMeta as Record<string, unknown> | null
+      }
+    })
   },
 
   async findByEventType(eventType: string, options: PaginationOptions = {}) {
@@ -164,10 +189,14 @@ export const eventLogOperations = {
       orderBy: { timestamp: 'desc' }
     })
 
-    return logs.map(log => ({
-      ...log,
-      metadata: log.metadata ? JSON.parse(log.metadata) : null
-    }))
+    return logs.map(log => {
+      const rawMeta = (log as unknown as { metadata: unknown }).metadata
+      const normalizedMeta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta
+      return {
+        ...log,
+        metadata: normalizedMeta as Record<string, unknown> | null
+      }
+    })
   }
 }
 

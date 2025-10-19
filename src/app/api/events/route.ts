@@ -114,10 +114,18 @@ export async function GET(request: NextRequest) {
     });
 
     // Parse metadata for each event
-    const eventsWithParsedMetadata = events.map(event => ({
-      ...event,
-      metadata: event.metadata ? JSON.parse(event.metadata) : null,
-    }));
+    const eventsWithParsedMetadata = events.map(event => {
+      const raw = (event as unknown as { metadata: unknown }).metadata;
+      let normalized: Record<string, unknown> | null = null;
+      if (raw === null || raw === undefined) {
+        normalized = null;
+      } else if (typeof raw === 'string') {
+        try { normalized = JSON.parse(raw) as Record<string, unknown>; } catch { normalized = null; }
+      } else {
+        normalized = raw as Record<string, unknown>;
+      }
+      return { ...event, metadata: normalized };
+    });
 
     const totalPages = Math.ceil(totalCount / limit);
 
