@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { APIResponse } from '@/lib/types';
 import { z } from 'zod';
+import { getDatabaseConfig } from '@/lib/db-config';
+import { Prisma } from '@prisma/client';
 
 // Validation schema for profile updates
 const updateProfileSchema = z.object({
@@ -23,16 +25,6 @@ export async function GET() {
 
     let user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: {
-        id: true,
-        name: true,
-        displayName: true,
-        username: true,
-        email: true,
-        image: true,
-        createdAt: true,
-        updatedAt: true,
-      },
     });
 
     if (!user) {
@@ -49,16 +41,6 @@ export async function GET() {
       }
       const newUser = await prisma.user.create({
         data: createData as unknown as import('@prisma/client').Prisma.UserCreateInput,
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          username: true,
-          email: true,
-          image: true,
-          createdAt: true,
-          updatedAt: true,
-        },
       });
       user = newUser;
     }
@@ -111,40 +93,35 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const validatedData = updateProfileSchema.parse(body);
 
-    // Check if username is already taken (if provided)
-    if (validatedData.username) {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          username: validatedData.username,
-          id: { not: user.id }, // Exclude current user
-        },
-      });
-
-      if (existingUser) {
+    const isPostgres = getDatabaseConfig().provider === 'postgresql';
+    if (isPostgres) {
+      // In production schema, displayName/username are not supported
+      if (validatedData.displayName || validatedData.username) {
         return NextResponse.json<APIResponse>({
           success: false,
-          error: 'Username is already taken',
+          error: 'Profile fields not supported in production schema',
         }, { status: 400 });
       }
+      // Return current user unchanged
+      return NextResponse.json<APIResponse<typeof user>>({
+        success: true,
+        data: user,
+        message: 'No changes applied',
+      });
     }
 
-    // Update user profile
+    // Dev/SQLite: update user profile fields that exist in dev schema
+    const updateData: Record<string, unknown> = {};
+    if (validatedData.displayName !== undefined) {
+      updateData['displayName'] = validatedData.displayName;
+    }
+    if (validatedData.username !== undefined) {
+      updateData['username'] = validatedData.username;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: {
-        displayName: validatedData.displayName,
-        username: validatedData.username,
-      },
-      select: {
-        id: true,
-        name: true,
-        displayName: true,
-        username: true,
-        email: true,
-        image: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      data: updateData as unknown as Prisma.UserUpdateInput,
     });
 
     return NextResponse.json<APIResponse<typeof updatedUser>>({
