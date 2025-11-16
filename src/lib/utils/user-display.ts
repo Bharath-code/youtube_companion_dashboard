@@ -4,7 +4,7 @@ import { Session } from 'next-auth';
 /**
  * Get the user's preferred display name with fallback logic
  */
-export function getUserDisplayName(user: User | null, session?: Session | null): string {
+export function getUserDisplayName(user: Partial<User> | null, session?: Session | null): string {
   if (!user && !session) {
     return 'Anonymous User';
   }
@@ -47,7 +47,7 @@ export function getUserDisplayName(user: User | null, session?: Session | null):
 /**
  * Get a short display name (for avatars, etc.)
  */
-export function getUserShortName(user: User | null, session?: Session | null): string {
+export function getUserShortName(user: Partial<User> | null, session?: Session | null): string {
   const fullName = getUserDisplayName(user, session);
   
   // If it's a single word, return first 2 characters
@@ -67,14 +67,14 @@ export function getUserShortName(user: User | null, session?: Session | null): s
 /**
  * Check if user has a custom display name set
  */
-export function hasCustomDisplayName(user: User | null): boolean {
+export function hasCustomDisplayName(user: Partial<User> | null): boolean {
   return !!(user?.displayName || user?.username);
 }
 
 /**
  * Get user avatar with fallback logic
  */
-export function getUserAvatar(user: User | null, session?: Session | null): string | null {
+export function getUserAvatar(user: Partial<User> | null, session?: Session | null): string | null {
   if (user?.image) {
     return user.image;
   }
