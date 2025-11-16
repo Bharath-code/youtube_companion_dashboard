@@ -35,7 +35,7 @@ export async function GET() {
         if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
         if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
       }
-      user = await prisma.user.create({ data: createData as any });
+      user = await prisma.user.create({ data: createData as unknown as import('@prisma/client').Prisma.UserCreateInput });
     }
 
     // Fetch all notes for the user to extract tags

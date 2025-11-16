@@ -48,7 +48,7 @@ export async function GET() {
         if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
       }
       const newUser = await prisma.user.create({
-        data: createData as any,
+        data: createData as unknown as import('@prisma/client').Prisma.UserCreateInput,
         select: {
           id: true,
           name: true,
@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest) {
         if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
         if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
       }
-      user = await prisma.user.create({ data: createData as any });
+      user = await prisma.user.create({ data: createData as unknown as import('@prisma/client').Prisma.UserCreateInput });
     }
 
     // Parse and validate request body

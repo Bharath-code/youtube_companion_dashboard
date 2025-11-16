@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { APIResponse } from '@/lib/types';
 import { z } from 'zod';
 import { getDatabaseConfig } from '@/lib/db-config';
+import { Prisma } from '@prisma/client';
 
 type EventMetadata = Record<string, unknown> | null;
 
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
         if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
         if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
       }
-      user = await prisma.user.create({ data: createData as any });
+      user = await prisma.user.create({ data: createData as unknown as Prisma.UserCreateInput });
     }
 
     // Parse and validate query parameters

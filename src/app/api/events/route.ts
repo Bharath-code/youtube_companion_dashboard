@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
         if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
         if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
       }
-      user = await prisma.user.create({ data: createData as any });
+      user = await prisma.user.create({ data: createData as unknown as Prisma.UserCreateInput });
     }
 
     // Parse and validate query parameters
@@ -193,3 +193,4 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 }
+import { Prisma } from '@prisma/client';

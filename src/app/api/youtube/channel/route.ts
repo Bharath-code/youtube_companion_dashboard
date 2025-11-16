@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { createAuthenticatedYouTubeService } from '@/lib/services/youtube-auth';
 import { YouTubeAPIError } from '@/lib/services/youtube';
 import { APIResponse } from '@/lib/types';
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     // Check authentication
     const session = await auth();

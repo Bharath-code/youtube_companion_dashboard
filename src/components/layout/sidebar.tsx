@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { 
   Home, 
   Video, 
-  StickyNote, 
   Activity,
   Menu,
   X

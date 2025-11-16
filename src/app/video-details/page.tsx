@@ -20,24 +20,10 @@ export default function VideoDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [isUnlisted, setIsUnlisted] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const { isAuthenticated, requireAuth } = useAuth();
 
   // Check for videoId in URL parameters
-  React.useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const videoId = urlParams.get('videoId');
-    if (videoId) {
-      setVideoUrl(videoId);
-      // Auto-fetch the video if we have a videoId in the URL
-      if (isAuthenticated) {
-        handleFetchVideoById(videoId);
-      }
-    }
-  }, [isAuthenticated]);
-
-  // Separate function to fetch video by ID (for URL parameter handling)
-  const handleFetchVideoById = async (videoId: string) => {
+  const handleFetchVideoById = React.useCallback(async (videoId: string) => {
     if (!requireAuth()) {
       return;
     }
@@ -69,7 +55,21 @@ export default function VideoDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [requireAuth]);
+
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const videoId = urlParams.get('videoId');
+    if (videoId) {
+      setVideoUrl(videoId);
+      // Auto-fetch the video if we have a videoId in the URL
+      if (isAuthenticated) {
+        handleFetchVideoById(videoId);
+      }
+    }
+  }, [isAuthenticated, handleFetchVideoById]);
+
+  // Separate function to fetch video by ID (for URL parameter handling)
 
   const extractVideoId = (urlOrId: string): string => {
     // If it's already a video ID (11 characters), return it
@@ -93,50 +93,6 @@ export default function VideoDetailsPage() {
     throw new Error('Invalid YouTube URL or video ID format');
   };
 
-  const handleFetchVideo = async () => {
-    if (!requireAuth()) {
-      return;
-    }
-
-    if (!videoUrl.trim()) {
-      setError('Please enter a YouTube video URL or ID');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const videoId = extractVideoId(videoUrl);
-
-      const response = await fetch(`/api/youtube/video/${videoId}`);
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch video details');
-      }
-
-      if (result.success && result.data) {
-        setVideo(result.data.video);
-        setIsOwner(result.data.isOwner);
-        setIsUnlisted(result.data.isUnlisted);
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (err) {
-      console.error('Error fetching video:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch video details');
-      setVideo(null);
-      setIsOwner(false);
-      setIsUnlisted(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
 
   const handleSaveEdit = async (updates: VideoUpdate) => {
     if (!video) return;
@@ -159,7 +115,6 @@ export default function VideoDetailsPage() {
       if (result.success && result.data) {
         // Update the video state with the new data
         setVideo(result.data);
-        setIsEditing(false);
       } else {
         throw new Error('Invalid response format');
       }
@@ -169,15 +124,7 @@ export default function VideoDetailsPage() {
     }
   };
 
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleFetchVideo();
-    }
-  };
+  
 
   return (
     <div className="container mx-auto py-8 space-y-8">

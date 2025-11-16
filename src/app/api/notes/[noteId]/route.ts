@@ -50,7 +50,7 @@ export async function GET(
         if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
         if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
       }
-      user = await prisma.user.create({ data: createData as any });
+      user = await prisma.user.create({ data: createData as unknown as import('@prisma/client').Prisma.UserCreateInput });
     }
 
     const { noteId } = await params;
@@ -140,7 +140,7 @@ export async function PUT(
         if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
         if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
       }
-      user = await prisma.user.create({ data: createData as any });
+      user = await prisma.user.create({ data: createData as unknown as import('@prisma/client').Prisma.UserCreateInput });
     }
 
     const { noteId } = await params;
@@ -277,7 +277,7 @@ export async function DELETE(
         if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
         if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
       }
-      user = await prisma.user.create({ data: createData as any });
+      user = await prisma.user.create({ data: createData as unknown as import('@prisma/client').Prisma.UserCreateInput });
     }
 
     const { noteId } = await params;
