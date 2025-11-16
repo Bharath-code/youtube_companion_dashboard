@@ -17,7 +17,19 @@ const isPostgres = () => getDatabaseConfig().provider === 'postgresql'
  */
 export const userOperations = {
   async create(data: CreateUserInput) {
-    return prisma.user.create({ data })
+    const isPg = isPostgres()
+    const createData: Record<string, unknown> = {
+      email: data.email,
+      name: data.name,
+      image: data.image,
+    }
+    if (isPg) {
+      const extended = data as unknown as { googleId?: string; accessToken?: string | null; refreshToken?: string | null }
+      createData['googleId'] = extended.googleId ?? data.email
+      if (extended.accessToken !== undefined) createData['accessToken'] = extended.accessToken
+      if (extended.refreshToken !== undefined) createData['refreshToken'] = extended.refreshToken
+    }
+    return prisma.user.create({ data: createData as unknown as Prisma.UserCreateInput })
   },
 
   async findByEmail(email: string) {
