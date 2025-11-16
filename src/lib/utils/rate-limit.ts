@@ -114,6 +114,12 @@ export const notesRateLimiter = new RateLimiter({
 });
 
 export const strictRateLimiter = new RateLimiter({
-    windowMs: 60 * 1000, // 1 minute
-    maxRequests: 10, // 10 requests per minute
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 10, // 10 requests per minute
+});
+
+// YouTube actions rate limiter (comment post/reply/delete)
+export const youtubeActionsRateLimiter = new RateLimiter({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    maxRequests: 30, // 30 actions per 5 minutes per user/IP
 });

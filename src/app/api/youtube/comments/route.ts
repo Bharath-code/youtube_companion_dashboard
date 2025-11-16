@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { youtubeService, YouTubeAPIError, YouTubeCommentsDisabledError } from '@/lib/services/youtube';
 import { APIResponse } from '@/lib/types';
+import { eventLogger } from '@/lib/services/event-logger';
+import { EventType, EntityType } from '@/lib/types/database';
+import { youtubeActionsRateLimiter } from '@/lib/utils/rate-limit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -83,6 +86,24 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Rate limit by user/IP
+    const clientId = youtubeActionsRateLimiter.getClientIdentifier(request, session.user?.id);
+    const rate = youtubeActionsRateLimiter.checkRateLimit(clientId);
+    if (!rate.allowed) {
+      return NextResponse.json<APIResponse>({
+        success: false,
+        error: 'Rate limit exceeded',
+        message: 'Too many actions. Please try again later.',
+      }, {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': '30',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': rate.resetTime.toString(),
+        },
+      });
+    }
+
     const service = youtubeService.getInstance();
     let result;
 
@@ -93,6 +114,19 @@ export async function POST(request: NextRequest) {
       // This is a new top-level comment
       result = await service.postComment(videoId, text.trim(), session.accessToken);
     }
+
+    // Log event
+    const clientIP = eventLogger.getClientIP(request);
+    const userAgent = eventLogger.getUserAgent(request);
+    await eventLogger.logEvent({
+      eventType: EventType.COMMENT_ADDED,
+      entityType: EntityType.COMMENT,
+      entityId: result.id,
+      metadata: { videoId, parentCommentId: parentCommentId ?? undefined },
+      ipAddress: clientIP,
+      userAgent,
+      userId: session.user?.id || 'system',
+    });
 
     return NextResponse.json<APIResponse<typeof result>>({
       success: true,

@@ -3,20 +3,10 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "framework": {
-    "name": "nextjs"
-  },
   "buildCommand": "npm run vercel-build",
   "outputDirectory": ".next",
   "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs18.x",
+    "src/app/api/**/*.ts": {
       "memory": 1024,
       "maxDuration": 10
     }

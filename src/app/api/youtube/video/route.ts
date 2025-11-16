@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { youtubeService, YouTubeAPIError } from '@/lib/services/youtube';
 import { APIResponse, VideoDetails } from '@/lib/types';
+import { eventLogger } from '@/lib/services/event-logger';
+import { EventType, EntityType } from '@/lib/types/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,6 +17,19 @@ export async function GET(request: NextRequest) {
     }
 
     const videoDetails = await youtubeService.getInstance().getVideoDetails(videoId);
+
+    // Log video viewed (public)
+    const clientIP = eventLogger.getClientIP(request);
+    const userAgent = eventLogger.getUserAgent(request);
+    await eventLogger.logEvent({
+      eventType: EventType.VIDEO_VIEWED,
+      entityType: EntityType.VIDEO,
+      entityId: videoId,
+      metadata: {},
+      ipAddress: clientIP,
+      userAgent,
+      userId: 'system',
+    });
 
     return NextResponse.json<APIResponse<VideoDetails>>({
       success: true,

@@ -8,14 +8,20 @@ async function main() {
   console.log('🌱 Seeding database...')
   
   // Create a test user (for development only)
+  const testUserCreateData: Record<string, unknown> = {
+    email: 'test@example.com',
+    name: 'Test User',
+    image: 'https://via.placeholder.com/150',
+  }
+  if (isPostgres()) {
+    // Production schema requires googleId
+    testUserCreateData['googleId'] = 'seed-google-id'
+  }
+
   const testUser = await prisma.user.upsert({
     where: { email: 'test@example.com' },
     update: {},
-    create: {
-      email: 'test@example.com',
-      name: 'Test User',
-      image: 'https://via.placeholder.com/150',
-    },
+    create: testUserCreateData as unknown as Prisma.UserCreateInput,
   })
 
   console.log('✅ Created test user:', testUser.email)

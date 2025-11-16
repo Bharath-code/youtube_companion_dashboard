@@ -6,6 +6,11 @@ import { useAuth } from '@/hooks/use-auth';
 import { Loader2, Video, StickyNote, User } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { VideoDetails } from '@/lib/types';
+import { VideoDetailsCard } from '@/components/features/video-details-card';
+import { VideoEditor } from '@/components/features/video-editor';
+import { CommentsSection } from '@/components/features/comments-section';
+import { NotesPanel } from '@/components/features/notes-panel';
 
 // Minimal shape used for dashboard summary
 type DashboardVideoSummary = {
@@ -27,6 +32,12 @@ export default function Home() {
   } | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  const [videoDetails, setVideoDetails] = useState<VideoDetails | null>(null);
+  const [videoMeta, setVideoMeta] = useState<{ isOwner: boolean; isUnlisted: boolean } | null>(null);
+  const [videoLoading, setVideoLoading] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -66,6 +77,14 @@ export default function Home() {
           totalViews,
           totalComments,
         });
+
+        // Select latest video (first entry) for quick details panel
+        if (videos.length > 0) {
+          const firstId = (videos as Array<{ id?: string }>)[0]?.id as string | undefined;
+          if (firstId) {
+            setSelectedVideoId(firstId);
+          }
+        }
       } catch (err) {
         setSummaryError(err instanceof Error ? err.message : 'Failed to load summary');
         setSummary(null);
@@ -76,6 +95,32 @@ export default function Home() {
 
     fetchSummary();
   }, [isAuthenticated]);
+
+  // Fetch selected video details with ownership validation
+  useEffect(() => {
+    const loadVideo = async () => {
+      if (!isAuthenticated || !selectedVideoId) return;
+      setVideoLoading(true);
+      setVideoError(null);
+      try {
+        const res = await fetch(`/api/youtube/video/${selectedVideoId}`);
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || 'Failed to load video');
+        }
+        const { video, isOwner, isUnlisted } = json.data as { video: VideoDetails; isOwner: boolean; isUnlisted: boolean };
+        setVideoDetails(video);
+        setVideoMeta({ isOwner, isUnlisted });
+      } catch (e) {
+        setVideoError(e instanceof Error ? e.message : 'Failed to load video');
+        setVideoDetails(null);
+        setVideoMeta(null);
+      } finally {
+        setVideoLoading(false);
+      }
+    };
+    loadVideo();
+  }, [isAuthenticated, selectedVideoId]);
 
   if (isLoading) {
     return (
@@ -181,8 +226,47 @@ export default function Home() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Inline Latest Video Panel */}
+              {selectedVideoId && (
+                <div className="mt-8 grid gap-6">
+                  <VideoDetailsCard
+                    video={videoDetails}
+                    loading={videoLoading}
+                    error={videoError}
+                    isOwner={!!videoMeta?.isOwner}
+                    isUnlisted={!!videoMeta?.isUnlisted}
+                    onEdit={() => setEditing(true)}
+                  />
+
+                  {editing && videoDetails && (
+                    <VideoEditor
+                      video={videoDetails}
+                      onSave={async (updates) => {
+                        const res = await fetch(`/api/youtube/video/${selectedVideoId}/update`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(updates),
+                        });
+                        const json = await res.json();
+                        if (!res.ok || !json.success) throw new Error(json.error || 'Failed to update');
+                        // Refresh details
+                        setEditing(false);
+                        setSelectedVideoId(selectedVideoId);
+                      }}
+                      onCancel={() => setEditing(false)}
+                    />
+                  )}
+
+                  {/* Comments and Notes for selected video */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <CommentsSection videoId={selectedVideoId} />
+                    <NotesPanel videoId={selectedVideoId} />
+                  </div>
+                </div>
+              )}
+
               
-             
             </>
           ) : (
             <>

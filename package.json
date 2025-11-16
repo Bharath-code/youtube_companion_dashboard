@@ -23,7 +23,7 @@
     "db:deploy": "prisma migrate deploy",
     "build:production": "npm run db:generate && npm run type-check && npm run lint && npm run build",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate --schema prisma/schema.production.prisma && prisma migrate deploy --schema prisma/schema.production.prisma && next build"
+    "vercel-build": "prisma generate --schema prisma/schema.production.prisma && prisma db push --schema prisma/schema.production.prisma && next build"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -50,6 +50,7 @@
     "react-hook-form": "^7.62.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
+    "vercel": "^48.4.0",
     "zod": "^4.0.17"
   },
   "devDependencies": {

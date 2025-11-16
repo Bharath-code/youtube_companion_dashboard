@@ -173,6 +173,9 @@ export class YouTubeService {
   private readonly baseUrl = 'https://www.googleapis.com/youtube/v3';
   private readonly maxRetries = 3;
   private readonly retryDelay = 1000; // 1 second base delay
+  private readonly cacheTtlMs = 60 * 1000; // 60 seconds
+  private videoCache = new Map<string, { data: VideoDetails; expires: number }>();
+  private commentsCache = new Map<string, { data: { comments: Comment[]; nextPageToken?: string }; expires: number }>();
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey || process.env.YOUTUBE_API_KEY || '';
@@ -399,6 +402,11 @@ export class YouTubeService {
   async getVideoDetails(videoUrlOrId: string): Promise<VideoDetails> {
     try {
       const videoId = this.extractVideoId(videoUrlOrId);
+      const now = Date.now();
+      const cached = this.videoCache.get(videoId);
+      if (cached && cached.expires > now) {
+        return cached.data;
+      }
       
       const response = await this.makeRequest<YouTubeAPIVideoResponse>('videos', {
         part: 'snippet,statistics,status',
@@ -420,7 +428,9 @@ export class YouTubeService {
         );
       }
 
-      return this.transformVideoDetails(videoItem);
+      const transformed = this.transformVideoDetails(videoItem);
+      this.videoCache.set(videoId, { data: transformed, expires: Date.now() + this.cacheTtlMs });
+      return transformed;
     } catch (error) {
       if (error instanceof YouTubeAPIError) {
         throw error;
@@ -445,6 +455,12 @@ export class YouTubeService {
   ): Promise<{ comments: Comment[]; nextPageToken?: string }> {
     try {
       const videoId = this.extractVideoId(videoUrlOrId);
+      const cacheKey = `${videoId}:${maxResults}:${pageToken || ''}`;
+      const now = Date.now();
+      const cached = this.commentsCache.get(cacheKey);
+      if (cached && cached.expires > now) {
+        return cached.data;
+      }
       
       const params: Record<string, string> = {
         part: 'snippet,replies',
@@ -464,10 +480,12 @@ export class YouTubeService {
 
       const comments = response.items.map(item => this.transformComment(item));
 
-      return {
+      const result = {
         comments,
         nextPageToken: response.nextPageToken,
       };
+      this.commentsCache.set(cacheKey, { data: result, expires: Date.now() + this.cacheTtlMs });
+      return result;
     } catch (error) {
       if (error instanceof YouTubeAPIError) {
         throw error;
