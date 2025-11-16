@@ -39,14 +39,18 @@ export async function GET(
     });
 
     if (!user) {
-      // Create user if they don't exist (since we're using JWT strategy)
-      user = await prisma.user.create({
-        data: {
-          email: session.user.email,
-          name: session.user.name,
-          image: session.user.image,
-        },
-      });
+      const isPg = isPostgres();
+      const createData: Record<string, unknown> = {
+        email: session.user.email,
+        name: session.user.name,
+        image: session.user.image,
+      };
+      if (isPg) {
+        createData['googleId'] = (session.user as { id?: string }).id || session.user.email;
+        if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
+        if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
+      }
+      user = await prisma.user.create({ data: createData as any });
     }
 
     const { noteId } = await params;
@@ -125,14 +129,18 @@ export async function PUT(
     });
 
     if (!user) {
-      // Create user if they don't exist (since we're using JWT strategy)
-      user = await prisma.user.create({
-        data: {
-          email: session.user.email,
-          name: session.user.name,
-          image: session.user.image,
-        },
-      });
+      const isPg = isPostgres();
+      const createData: Record<string, unknown> = {
+        email: session.user.email,
+        name: session.user.name,
+        image: session.user.image,
+      };
+      if (isPg) {
+        createData['googleId'] = (session.user as { id?: string }).id || session.user.email;
+        if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
+        if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
+      }
+      user = await prisma.user.create({ data: createData as any });
     }
 
     const { noteId } = await params;
@@ -258,14 +266,18 @@ export async function DELETE(
     });
 
     if (!user) {
-      // Create user if they don't exist (since we're using JWT strategy)
-      user = await prisma.user.create({
-        data: {
-          email: session.user.email,
-          name: session.user.name,
-          image: session.user.image,
-        },
-      });
+      const isPg = isPostgres();
+      const createData: Record<string, unknown> = {
+        email: session.user.email,
+        name: session.user.name,
+        image: session.user.image,
+      };
+        if (isPg) {
+        createData['googleId'] = (session.user as { id?: string }).id || session.user.email;
+        if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
+        if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
+      }
+      user = await prisma.user.create({ data: createData as any });
     }
 
     const { noteId } = await params;

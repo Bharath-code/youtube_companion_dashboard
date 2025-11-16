@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { APIResponse } from '@/lib/types';
 import { z } from 'zod';
+import { getDatabaseConfig } from '@/lib/db-config';
 
 type EventMetadata = Record<string, unknown> | null;
 
@@ -59,14 +60,18 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      // Create user if they don't exist (since we're using JWT strategy)
-      user = await prisma.user.create({
-        data: {
-          email: session.user.email,
-          name: session.user.name,
-          image: session.user.image,
-        },
-      });
+      const isPostgres = getDatabaseConfig().provider === 'postgresql';
+      const createData: Record<string, unknown> = {
+        email: session.user.email,
+        name: session.user.name,
+        image: session.user.image,
+      };
+      if (isPostgres) {
+        createData['googleId'] = (session.user as { id?: string }).id || session.user.email;
+        if ((session as { accessToken?: string }).accessToken) createData['accessToken'] = (session as { accessToken?: string }).accessToken;
+        if ((session as { refreshToken?: string }).refreshToken) createData['refreshToken'] = (session as { refreshToken?: string }).refreshToken;
+      }
+      user = await prisma.user.create({ data: createData as any });
     }
 
     // Parse and validate query parameters
