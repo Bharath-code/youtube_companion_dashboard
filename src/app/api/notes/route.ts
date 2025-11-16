@@ -6,6 +6,7 @@ import { eventLogger } from '@/lib/services/event-logger';
 import { notesRateLimiter } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
 import { getDatabaseConfig } from '@/lib/db-config';
+import { Prisma } from '@prisma/client';
 
 const isPostgres = () => getDatabaseConfig().provider === 'postgresql';
 
@@ -287,14 +288,18 @@ export async function POST(request: NextRequest) {
     const validatedData = createNoteSchema.parse(body);
 
     // Create note in database
+    const noteCreateData: Record<string, unknown> = {
+      videoId: validatedData.videoId,
+      content: validatedData.content,
+      userId: user.id,
+    };
+
+    noteCreateData['tags'] = isPostgres()
+      ? (validatedData.tags ?? [])
+      : JSON.stringify(validatedData.tags ?? []);
+
     const note = await prisma.note.create({
-      data: {
-        videoId: validatedData.videoId,
-        content: validatedData.content,
-        // Cast through unknown to satisfy Prisma types in dev (string) and prod (string[])
-        tags: (isPostgres() ? (validatedData.tags ?? []) : JSON.stringify(validatedData.tags ?? [])) as unknown as string,
-        userId: user.id,
-      },
+      data: noteCreateData as unknown as Prisma.NoteCreateInput,
     });
 
     // Normalize tags for response
