@@ -28,13 +28,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <User className="w-8 h-8" />
+    <div className="container mx-auto p-4 md:p-6 space-y-6 md:space-y-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-3">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold flex items-center gap-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <User className="w-6 h-6 md:w-8 md:h-8" />
+          </div>
           Profile Settings
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-base md:text-lg text-muted-foreground max-w-3xl leading-relaxed">
           Manage your display name and profile preferences.
         </p>
       </div>

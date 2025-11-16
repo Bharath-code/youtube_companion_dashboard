@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, ThumbsUp, MessageCircle, Calendar, Lock, Globe, Users, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils';
 
 interface VideoListProps {
   onVideoSelect?: (video: VideoDetails) => void;
@@ -263,21 +264,24 @@ export function VideoList({ onVideoSelect, className }: VideoListProps) {
             return (
               <div
                 key={video.id}
-                className="flex space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group"
+                className="flex space-x-4 p-5 md:p-6 border-2 rounded-xl hover:bg-muted/50 hover:border-primary/50 hover:shadow-lg transition-all duration-200 cursor-pointer group hover:scale-[1.01] active:scale-[0.99]"
                 onClick={() => handleVideoClick(video)}
               >
                 {/* Thumbnail */}
-                <div className="relative w-32 h-20 bg-gray-100 rounded overflow-hidden shrink-0">
+                <div className="relative w-32 h-20 md:w-40 md:h-24 bg-gray-100 rounded-lg overflow-hidden shrink-0 group-hover:ring-2 group-hover:ring-primary/50 transition-all duration-200">
                   {thumbnail ? (
-                    <Image
-                      src={thumbnail.url}
-                      alt={video.title}
-                      fill
-                      className="object-cover"
-                      sizes="128px"
-                    />
+                    <>
+                      <Image
+                        src={thumbnail.url}
+                        alt={video.title}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-300"
+                        sizes="(max-width: 768px) 128px, 160px"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    </>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
                       <Eye className="w-6 h-6 text-muted-foreground" />
                     </div>
                   )}
@@ -285,40 +289,41 @@ export function VideoList({ onVideoSelect, className }: VideoListProps) {
 
                 {/* Video Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-sm line-clamp-2 pr-2 group-hover:text-primary transition-colors">
+                  <div className="flex items-start justify-between mb-3 gap-3">
+                    <h3 className="font-semibold text-sm md:text-base line-clamp-2 flex-1 group-hover:text-primary transition-colors duration-200">
                       {video.title}
                     </h3>
-                    <div className="flex items-center gap-2 shrink-0 ml-2">
-                      <Badge variant="secondary" className={privacyInfo.color}>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="secondary" className={cn(privacyInfo.color, "transition-all duration-200 group-hover:scale-105")}>
                         <PrivacyIcon className="w-3 h-3 mr-1" />
-                        {privacyInfo.label}
+                        <span className="hidden sm:inline">{privacyInfo.label}</span>
+                        <span className="sm:hidden">{privacyInfo.label.charAt(0)}</span>
                       </Badge>
-                      <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all duration-200" />
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-4 text-xs text-muted-foreground mb-2">
-                    <div className="flex items-center space-x-1">
-                      <Eye className="w-3 h-3" />
-                      <span>{formatNumber(video.statistics.viewCount)}</span>
+                  <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm text-muted-foreground mb-3">
+                    <div className="flex items-center space-x-1.5 px-2 py-1 rounded-md bg-muted/30 group-hover:bg-muted/50 transition-colors duration-200">
+                      <Eye className="w-3.5 h-3.5" />
+                      <span className="font-medium">{formatNumber(video.statistics.viewCount)}</span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <ThumbsUp className="w-3 h-3" />
-                      <span>{formatNumber(video.statistics.likeCount)}</span>
+                    <div className="flex items-center space-x-1.5 px-2 py-1 rounded-md bg-muted/30 group-hover:bg-muted/50 transition-colors duration-200">
+                      <ThumbsUp className="w-3.5 h-3.5" />
+                      <span className="font-medium">{formatNumber(video.statistics.likeCount)}</span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <MessageCircle className="w-3 h-3" />
-                      <span>{formatNumber(video.statistics.commentCount)}</span>
+                    <div className="flex items-center space-x-1.5 px-2 py-1 rounded-md bg-muted/30 group-hover:bg-muted/50 transition-colors duration-200">
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span className="font-medium">{formatNumber(video.statistics.commentCount)}</span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>{formatDate(video.publishedAt)}</span>
+                    <div className="flex items-center space-x-1.5 px-2 py-1 rounded-md bg-muted/30 group-hover:bg-muted/50 transition-colors duration-200">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span className="font-medium">{formatDate(video.publishedAt)}</span>
                     </div>
                   </div>
 
                   {video.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">
+                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                       {video.description}
                     </p>
                   )}
@@ -330,16 +335,21 @@ export function VideoList({ onVideoSelect, className }: VideoListProps) {
 
         {/* Load More Button */}
         {nextPageToken && (
-          <div className="mt-6 text-center">
+          <div className="mt-8 text-center">
             <Button
               variant="outline"
               onClick={loadMore}
               disabled={loadingMore}
+              className="gap-2 min-w-[180px]"
             >
               {loadingMore ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : null}
-              Load More Videos
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Load More Videos'
+              )}
             </Button>
           </div>
         )}

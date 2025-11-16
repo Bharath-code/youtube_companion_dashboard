@@ -60,15 +60,17 @@ export default function NotesPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 md:p-6 space-y-6 md:space-y-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <StickyNote className="w-8 h-8" />
+      <div className="space-y-4 md:space-y-6">
+        <div className="space-y-3">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold flex items-center gap-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <StickyNote className="w-6 h-6 md:w-8 md:h-8" />
+            </div>
             Notes by Video
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-base md:text-lg text-muted-foreground max-w-3xl leading-relaxed">
             Notes are attached to individual videos. Pick a video to jot ideas.
           </p>
         </div>
@@ -122,15 +124,15 @@ export default function NotesPage() {
         </Card>
 
         {/* Quick Actions */}
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline" size="sm">
+        <div className="flex flex-wrap gap-3">
+          <Button asChild variant="outline" size="default" className="gap-2">
             <a href="/videos">
               Browse My Videos
             </a>
           </Button>
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline" size="default" className="gap-2">
             <a href="/test-search">
-              <Search className="w-4 h-4 mr-2" />
+              <Search className="w-4 h-4" />
               Test Search Features
             </a>
           </Button>

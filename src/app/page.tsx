@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, Video, StickyNote, User } from 'lucide-react';
+import { Loader2, Video, StickyNote, User, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { VideoDetails } from '@/lib/types';
@@ -131,13 +131,13 @@ export default function Home() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8 md:space-y-10">
       {/* Welcome Section */}
-      <div>
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-sky-600 dark:from-indigo-400 dark:via-fuchsia-400 dark:to-sky-400">
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-3 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-sky-600 dark:from-indigo-400 dark:via-fuchsia-400 dark:to-sky-400 animate-pulse-slow">
           {isAuthenticated ? `Welcome back, ${user?.name}!` : 'YouTube Companion Dashboard'}
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl">
+        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl leading-relaxed">
           {isAuthenticated
             ? "Elevate your YouTube workflow with insights, notes, and smart actions — all in one place."
             : "Sign in with your Google account to organize videos, manage comments, and keep powerful notes together."
@@ -155,74 +155,122 @@ export default function Home() {
         <CardContent>
           {isAuthenticated ? (
             <>
-              <div className="rounded-xl p-6 mb-6 border bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-sky-500/10 dark:from-indigo-500/15 dark:via-purple-500/15 dark:to-sky-500/15 backdrop-blur-xl">
-                <h3 className="font-semibold mb-2">✨ Unified, frictionless management</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Manage video metadata, explore insights, and capture notes in a single, cohesive experience.
-                </p>
-                <div className="flex gap-2">
-                  <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700">
-                    <Link href="/videos">Browse My Videos</Link>
-                  </Button>
+              <div className="relative rounded-2xl p-6 md:p-8 mb-8 border-2 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-sky-500/10 dark:from-indigo-500/15 dark:via-purple-500/15 dark:to-sky-500/15 backdrop-blur-xl hover:shadow-xl transition-all duration-300 group/cta overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover/cta:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    <span className="text-2xl">✨</span>
+                    Unified, frictionless management
+                  </h3>
+                  <p className="text-muted-foreground text-sm md:text-base mb-6 max-w-2xl">
+                    Manage video metadata, explore insights, and capture notes in a single, cohesive experience.
+                  </p>
+                  <div className="flex gap-3 flex-wrap">
+                    <Button asChild size="default" className="shadow-lg">
+                      <Link href="/videos">Browse My Videos</Link>
+                    </Button>
+                    <Button asChild variant="outline" size="default">
+                      <Link href="/notes">View Notes</Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
               
-              <p className="text-muted-foreground mb-6">
+              <p className="text-muted-foreground mb-6 text-center md:text-left">
                 Access tools from the sidebar or use quick actions below.
               </p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
-                  <Link href="/videos">
-                    <Video className="h-6 w-6" />
-                    <span>Browse Videos</span>
+                <Button asChild variant="outline" className="h-auto p-6 flex-col space-y-3 group/action hover:border-primary/50 hover:shadow-md transition-all duration-200">
+                  <Link href="/videos" className="flex flex-col items-center gap-3">
+                    <div className="p-3 rounded-lg bg-primary/10 group-hover/action:bg-primary/20 transition-colors duration-200">
+                      <Video className="h-6 w-6 group-hover/action:scale-110 transition-transform duration-200" />
+                    </div>
+                    <span className="font-medium">Browse Videos</span>
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
-                  <Link href="/profile">
-                    <User className="h-6 w-6" />
-                    <span>Profile</span>
+                <Button asChild variant="outline" className="h-auto p-6 flex-col space-y-3 group/action hover:border-primary/50 hover:shadow-md transition-all duration-200">
+                  <Link href="/profile" className="flex flex-col items-center gap-3">
+                    <div className="p-3 rounded-lg bg-primary/10 group-hover/action:bg-primary/20 transition-colors duration-200">
+                      <User className="h-6 w-6 group-hover/action:scale-110 transition-transform duration-200" />
+                    </div>
+                    <span className="font-medium">Profile</span>
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="h-auto p-6 flex-col space-y-3 group/action hover:border-primary/50 hover:shadow-md transition-all duration-200">
+                  <Link href="/notes" className="flex flex-col items-center gap-3">
+                    <div className="p-3 rounded-lg bg-primary/10 group-hover/action:bg-primary/20 transition-colors duration-200">
+                      <StickyNote className="h-6 w-6 group-hover/action:scale-110 transition-transform duration-200" />
+                    </div>
+                    <span className="font-medium">Notes</span>
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="h-auto p-6 flex-col space-y-3 group/action hover:border-primary/50 hover:shadow-md transition-all duration-200">
+                  <Link href="/events" className="flex flex-col items-center gap-3">
+                    <div className="p-3 rounded-lg bg-primary/10 group-hover/action:bg-primary/20 transition-colors duration-200">
+                      <Activity className="h-6 w-6 group-hover/action:scale-110 transition-transform duration-200" />
+                    </div>
+                    <span className="font-medium">Events</span>
                   </Link>
                 </Button>
               </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Dashboard Summary</CardTitle>
+              <Card className="overflow-hidden">
+                <CardHeader className="border-b border-white/10">
+                  <CardTitle className="text-xl">Quick Dashboard Summary</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   {summaryLoading ? (
-                    <div className="text-sm text-muted-foreground">Loading summary...</div>
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mr-2" />
+                      <span className="text-sm text-muted-foreground">Loading summary...</span>
+                    </div>
                   ) : summaryError ? (
-                    <div className="text-sm text-red-500">{summaryError}</div>
+                    <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                      <p className="text-sm text-destructive">{summaryError}</p>
+                    </div>
                   ) : summary ? (
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="rounded-xl border bg-card p-4">
-                        <div className="text-sm text-muted-foreground">Videos Uploaded</div>
-                        <div className="text-2xl font-bold">{summary.totalVideos}</div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                      <div className="group/stat relative rounded-xl border-2 bg-gradient-to-br from-card to-card/50 p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+                        <div className="text-xs md:text-sm text-muted-foreground mb-2 font-medium uppercase tracking-wide">Videos Uploaded</div>
+                        <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                          {summary.totalVideos}
+                        </div>
                       </div>
-                      <div className="rounded-xl border bg-card p-4">
-                        <div className="text-sm text-muted-foreground">Public</div>
-                        <div className="text-2xl font-bold">{summary.publicCount}</div>
+                      <div className="group/stat relative rounded-xl border-2 bg-gradient-to-br from-card to-card/50 p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+                        <div className="text-xs md:text-sm text-muted-foreground mb-2 font-medium uppercase tracking-wide">Public</div>
+                        <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
+                          {summary.publicCount}
+                        </div>
                       </div>
-                      <div className="rounded-xl border bg-card p-4">
-                        <div className="text-sm text-muted-foreground">Unlisted</div>
-                        <div className="text-2xl font-bold">{summary.unlistedCount}</div>
+                      <div className="group/stat relative rounded-xl border-2 bg-gradient-to-br from-card to-card/50 p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+                        <div className="text-xs md:text-sm text-muted-foreground mb-2 font-medium uppercase tracking-wide">Unlisted</div>
+                        <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+                          {summary.unlistedCount}
+                        </div>
                       </div>
-                      <div className="rounded-xl border bg-card p-4">
-                        <div className="text-sm text-muted-foreground">Private</div>
-                        <div className="text-2xl font-bold">{summary.privateCount}</div>
+                      <div className="group/stat relative rounded-xl border-2 bg-gradient-to-br from-card to-card/50 p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+                        <div className="text-xs md:text-sm text-muted-foreground mb-2 font-medium uppercase tracking-wide">Private</div>
+                        <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">
+                          {summary.privateCount}
+                        </div>
                       </div>
-                      <div className="rounded-xl border bg-card p-4">
-                        <div className="text-sm text-muted-foreground">Total Views (recent)</div>
-                        <div className="text-2xl font-bold">{summary.totalViews.toLocaleString()}</div>
+                      <div className="group/stat relative rounded-xl border-2 bg-gradient-to-br from-card to-card/50 p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+                        <div className="text-xs md:text-sm text-muted-foreground mb-2 font-medium uppercase tracking-wide">Total Views (recent)</div>
+                        <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+                          {summary.totalViews.toLocaleString()}
+                        </div>
                       </div>
-                      <div className="rounded-xl border bg-card p-4">
-                        <div className="text-sm text-muted-foreground">Total Comments (recent)</div>
-                        <div className="text-2xl font-bold">{summary.totalComments.toLocaleString()}</div>
+                      <div className="group/stat relative rounded-xl border-2 bg-gradient-to-br from-card to-card/50 p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+                        <div className="text-xs md:text-sm text-muted-foreground mb-2 font-medium uppercase tracking-wide">Total Comments (recent)</div>
+                        <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent">
+                          {summary.totalComments.toLocaleString()}
+                        </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-sm text-muted-foreground">No data available.</div>
+                    <div className="text-center py-12 text-muted-foreground">
+                      <p className="text-sm">No data available.</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -289,46 +337,52 @@ export default function Home() {
 
       {/* Feature Overview Cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
+        <Card className="group/feature hover:border-primary/50 transition-all duration-300">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Video className="h-5 w-5" />
+            <CardTitle className="flex items-center space-x-3 group-hover/feature:text-primary transition-colors duration-200">
+              <div className="p-2 rounded-lg bg-primary/10 group-hover/feature:bg-primary/20 transition-colors duration-200">
+                <Video className="h-5 w-5 group-hover/feature:scale-110 transition-transform duration-200" />
+              </div>
               <span>Video Management</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground leading-relaxed">
               View video statistics, edit titles and descriptions, and manage your content with YouTube API integration.
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group/feature hover:border-primary/50 transition-all duration-300">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span className="inline-flex items-center gap-2">
-                <Video className="h-5 w-5" />
-                <StickyNote className="h-5 w-5" />
-              </span>
+            <CardTitle className="flex items-center space-x-3 group-hover/feature:text-primary transition-colors duration-200">
+              <div className="p-2 rounded-lg bg-primary/10 group-hover/feature:bg-primary/20 transition-colors duration-200">
+                <span className="inline-flex items-center gap-1.5">
+                  <Video className="h-4 w-4 group-hover/feature:scale-110 transition-transform duration-200" />
+                  <StickyNote className="h-4 w-4 group-hover/feature:scale-110 transition-transform duration-200" />
+                </span>
+              </div>
               <span>Integrated Management</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground leading-relaxed">
               Edit video metadata and manage notes in one unified interface. No more switching between tabs!
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group/feature hover:border-primary/50 transition-all duration-300">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <StickyNote className="h-5 w-5" />
+            <CardTitle className="flex items-center space-x-3 group-hover/feature:text-primary transition-colors duration-200">
+              <div className="p-2 rounded-lg bg-primary/10 group-hover/feature:bg-primary/20 transition-colors duration-200">
+                <StickyNote className="h-5 w-5 group-hover/feature:scale-110 transition-transform duration-200" />
+              </div>
               <span>Notes & Organization</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground leading-relaxed">
               Keep track of ideas, feedback, and improvements with searchable notes and tagging system.
             </p>
           </CardContent>

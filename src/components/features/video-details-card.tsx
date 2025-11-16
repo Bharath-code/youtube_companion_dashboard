@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { VideoDetails } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Eye, ThumbsUp, MessageCircle, Calendar, User, ExternalLink, Lock, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -151,16 +152,16 @@ export function VideoDetailsCard({
                 {video.title}
               </CardTitle>
               {isUnlisted && (
-                <div className="flex items-center space-x-1 bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium shrink-0">
-                  <Lock className="w-3 h-3" />
+                <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 hover:bg-orange-500/30 shrink-0">
+                  <Lock className="w-3 h-3 mr-1" />
                   <span>Unlisted</span>
-                </div>
+                </Badge>
               )}
               {isOwner && (
-                <div className="flex items-center space-x-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium shrink-0">
-                  <Shield className="w-3 h-3" />
+                <Badge variant="secondary" className="bg-green-500/20 text-green-700 border-green-500/30 hover:bg-green-500/30 shrink-0">
+                  <Shield className="w-3 h-3 mr-1" />
                   <span>Your Video</span>
-                </div>
+                </Badge>
               )}
             </div>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
@@ -190,27 +191,28 @@ export function VideoDetailsCard({
       <CardContent className="space-y-6">
         {/* Video Thumbnail */}
         {thumbnail && (
-          <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+          <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-100 border-2 border-white/20 group/thumb">
             <Image
               src={thumbnail.url}
               alt={video.title}
               fill
-              className="object-cover"
+              className="object-cover group-hover/thumb:scale-110 transition-transform duration-500"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               priority
             />
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-300">
               <Button
                 variant="secondary"
-                size="sm"
+                size="default"
                 asChild
-                className="bg-white/90 hover:bg-white text-black"
+                className="bg-white/95 hover:bg-white text-black shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-200"
               >
                 <a
                   href={`https://www.youtube.com/watch?v=${video.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center space-x-2"
+                  className="flex items-center gap-2"
                 >
                   <ExternalLink className="w-4 h-4" />
                   <span>Watch on YouTube</span>
@@ -221,28 +223,40 @@ export function VideoDetailsCard({
         )}
 
         {/* Video Statistics */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg">
-            <Eye className="w-5 h-5 text-blue-600" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="group/stat flex items-center space-x-3 p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-2 border-blue-500/20 rounded-xl hover:border-blue-500/40 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+            <div className="p-2 bg-blue-500/20 rounded-lg group-hover/stat:bg-blue-500/30 transition-colors duration-200">
+              <Eye className="w-5 h-5 text-blue-600 group-hover/stat:scale-110 transition-transform duration-200" />
+            </div>
             <div>
-              <div className="text-sm font-medium">{formatNumber(video.statistics.viewCount)}</div>
-              <div className="text-xs text-muted-foreground">Views</div>
+              <div className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+                {formatNumber(video.statistics.viewCount)}
+              </div>
+              <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Views</div>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg">
-            <ThumbsUp className="w-5 h-5 text-green-600" />
+          <div className="group/stat flex items-center space-x-3 p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border-2 border-green-500/20 rounded-xl hover:border-green-500/40 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+            <div className="p-2 bg-green-500/20 rounded-lg group-hover/stat:bg-green-500/30 transition-colors duration-200">
+              <ThumbsUp className="w-5 h-5 text-green-600 group-hover/stat:scale-110 transition-transform duration-200" />
+            </div>
             <div>
-              <div className="text-sm font-medium">{formatNumber(video.statistics.likeCount)}</div>
-              <div className="text-xs text-muted-foreground">Likes</div>
+              <div className="text-lg md:text-xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
+                {formatNumber(video.statistics.likeCount)}
+              </div>
+              <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Likes</div>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg">
-            <MessageCircle className="w-5 h-5 text-purple-600" />
+          <div className="group/stat flex items-center space-x-3 p-4 bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-2 border-purple-500/20 rounded-xl hover:border-purple-500/40 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+            <div className="p-2 bg-purple-500/20 rounded-lg group-hover/stat:bg-purple-500/30 transition-colors duration-200">
+              <MessageCircle className="w-5 h-5 text-purple-600 group-hover/stat:scale-110 transition-transform duration-200" />
+            </div>
             <div>
-              <div className="text-sm font-medium">{formatNumber(video.statistics.commentCount)}</div>
-              <div className="text-xs text-muted-foreground">Comments</div>
+              <div className="text-lg md:text-xl font-bold bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent">
+                {formatNumber(video.statistics.commentCount)}
+              </div>
+              <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Comments</div>
             </div>
           </div>
         </div>

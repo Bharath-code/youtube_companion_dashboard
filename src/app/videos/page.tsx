@@ -66,10 +66,12 @@ export default function VideosPage() {
   // Show video list if no video is selected
   if (!selectedVideo) {
     return (
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Your YouTube Videos</h1>
-          <p className="text-muted-foreground">
+      <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-3">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Your YouTube Videos
+          </h1>
+          <p className="text-base md:text-lg text-muted-foreground max-w-3xl leading-relaxed">
             Click on any video to open the integrated management interface where you can edit metadata, manage comments, and more.
           </p>
         </div>
@@ -81,17 +83,17 @@ export default function VideosPage() {
 
   // Show video details or editor
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center space-x-4">
-        <Button variant="outline" onClick={handleBackToList}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
+    <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+        <Button variant="outline" onClick={handleBackToList} className="gap-2">
+          <ArrowLeft className="w-4 h-4" />
           Back to Videos
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">
             {isEditing ? 'Edit Video' : 'Video Details'}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground line-clamp-2">
             {selectedVideo.title}
           </p>
         </div>
